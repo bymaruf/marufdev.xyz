@@ -5,33 +5,32 @@ import {
   Code2,
   Layers,
   FileCode2,
-  Palette,
   Server,
   Smartphone,
-  Network,
   Sparkles,
+  Shield,
 } from "lucide-react";
 import { TECH_STACK } from "@/data/portfolioData";
 
 export default function TechStackStrip() {
   const getIcon = (name: string) => {
     switch (name) {
-      case "React":
-        return <Code2 className="w-4 h-4 text-[#171717]" />;
+      case "Linux":
+        return <Server className="w-4 h-4 text-[#171717]" />;
+      case "Python":
+        return <FileCode2 className="w-4 h-4 text-[#171717]" />;
+      case "Cybersecurity":
+        return <Shield className="w-4 h-4 text-[#171717]" />;
+      case "AI & LLMs":
+        return <Sparkles className="w-4 h-4 text-[#171717]" />;
+      case "Kotlin":
+        return <Smartphone className="w-4 h-4 text-[#171717]" />;
+      case "C++":
+        return <FileCode2 className="w-4 h-4 text-[#171717]" />;
       case "Next.js":
         return <Layers className="w-4 h-4 text-[#171717]" />;
-      case "TypeScript":
-        return <FileCode2 className="w-4 h-4 text-[#171717]" />;
-      case "Tailwind CSS":
-        return <Palette className="w-4 h-4 text-[#171717]" />;
-      case "Node.js":
-        return <Server className="w-4 h-4 text-[#171717]" />;
-      case "Android":
-        return <Smartphone className="w-4 h-4 text-[#171717]" />;
-      case "REST APIs":
-        return <Network className="w-4 h-4 text-[#171717]" />;
-      case "Gemini AI":
-        return <Sparkles className="w-4 h-4 text-[#171717]" />;
+      case "Git & GitHub":
+        return <Code2 className="w-4 h-4 text-[#171717]" />;
       default:
         return <Code2 className="w-4 h-4 text-[#171717]" />;
     }
@@ -49,7 +48,7 @@ export default function TechStackStrip() {
               </h2>
             </div>
             <p className="text-xs text-[#525252] font-mono">
-              Full-Stack Web &bull; Native Android &bull; Gemini AI API
+              Cybersecurity &bull; AI & LLMs &bull; Kotlin &bull; C++
             </p>
           </div>
 
@@ -58,16 +57,16 @@ export default function TechStackStrip() {
             {TECH_STACK.map((tech) => (
               <div
                 key={tech.name}
-                className="group flex flex-col items-start justify-between p-3.5 rounded-2xl bg-[#F7F7F7] hover:bg-white border border-[#EBEBEB] hover:border-neutral-400 transition-colors duration-200"
+                className="group flex flex-col items-start justify-between p-3.5 rounded-2xl bg-[#F7F7F7] hover:bg-white border border-[#EBEBEB] hover:border-neutral-400 transition-colors duration-200 min-w-0"
               >
                 <div className="w-8 h-8 rounded-xl bg-white border border-[#E0E0E0] flex items-center justify-center mb-3">
                   {getIcon(tech.name)}
                 </div>
-                <div>
-                  <span className="text-xs font-semibold text-[#171717] block tracking-tight">
+                <div className="min-w-0">
+                  <span className="text-xs font-semibold text-[#171717] block tracking-tight break-words">
                     {tech.name}
                   </span>
-                  <span className="text-[10px] text-[#737373] uppercase tracking-wider font-mono">
+                  <span className="text-[10px] text-[#737373] uppercase tracking-wider font-mono break-words">
                     {tech.category}
                   </span>
                 </div>

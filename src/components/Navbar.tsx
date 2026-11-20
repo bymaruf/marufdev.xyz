@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Menu, X } from "lucide-react";
-import { PERSONAL_INFO, NAVIGATION_LINKS } from "@/data/portfolioData";
+import { NAVIGATION_LINKS } from "@/data/portfolioData";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -16,6 +16,16 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Lock body scroll while the mobile drawer is open
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileMenuOpen]);
 
   return (
     <header className="sticky top-0 z-50 w-full pt-4 px-4 sm:px-6 lg:px-8 transition-all duration-300">
@@ -70,7 +80,7 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-full text-[#171717] hover:bg-[#EBEBEB] transition-colors focus:outline-none"
+            className="md:hidden min-h-11 min-w-11 p-2 rounded-full text-[#171717] hover:bg-[#EBEBEB] transition-colors focus:outline-none"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -87,7 +97,7 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-4 py-3 text-sm font-medium text-[#171717] hover:bg-[#F7F7F7] rounded-2xl transition-colors"
+                className="min-h-11 px-4 py-3 text-sm font-medium text-[#171717] hover:bg-[#F7F7F7] rounded-2xl transition-colors"
               >
                 {link.label}
               </Link>
@@ -96,7 +106,7 @@ export default function Navbar() {
               <Link
                 href="#contact"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full inline-flex items-center justify-center gap-2 bg-[#171717] text-white text-sm font-medium py-3 rounded-2xl hover:bg-neutral-800 transition-colors"
+                className="w-full min-h-11 inline-flex items-center justify-center gap-2 bg-[#171717] text-white text-sm font-medium py-3 rounded-2xl hover:bg-neutral-800 transition-colors"
               >
                 <span>Start a project</span>
                 <ArrowUpRight className="w-4 h-4" />

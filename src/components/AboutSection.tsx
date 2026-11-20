@@ -14,12 +14,12 @@ export default function AboutSection() {
     {
       icon: <Cpu className="w-4 h-4 text-[#171717]" />,
       title: "AI & API Security",
-      desc: "Hardening applications using the Google Gemini API. Isolating API credentials, validating structured schema outputs, and mitigating prompt injection risks.",
+      desc: "Hardening LLM-powered applications built with the Gemini API. Isolating API credentials, validating structured schema outputs, and mitigating prompt reliability risks.",
     },
     {
       icon: <Terminal className="w-4 h-4 text-[#171717]" />,
       title: "Secure Systems & Code",
-      desc: "Understanding software from low-level memory and file I/O in C to native Android apps and Next.js web platforms to identify security flaws at the code level.",
+      desc: "Understanding software from low-level memory and file handling in C++ to native Android apps and web platforms to identify security flaws at the code level.",
     },
   ];
 
@@ -42,24 +42,20 @@ export default function AboutSection() {
                 </h2>
               </div>
 
-              {/* BUBT Education Card */}
+              {/* Academic Background Card */}
               <div className="p-5 rounded-2xl bg-[#F7F7F7] border border-[#E5E5E5] space-y-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-xl bg-white border border-[#DCDCDC] flex items-center justify-center shrink-0">
                     <GraduationCap className="w-4 h-4 text-[#171717]" />
                   </div>
-                  <div>
-                    <h3 className="text-xs font-semibold text-[#171717] tracking-tight">
+                  <div className="min-w-0">
+                    <h3 className="text-xs font-semibold text-[#171717] tracking-tight break-words">
                       {EDUCATION.degree}
                     </h3>
-                    <p className="text-[11px] text-[#525252]">
-                      {EDUCATION.institution} ({EDUCATION.shortName})
+                    <p className="text-[11px] text-[#525252] break-words">
+                      {EDUCATION.institution}
                     </p>
                   </div>
-                </div>
-                <div className="pt-2 border-t border-[#E5E5E5] flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-[#737373]">
-                  <span>{EDUCATION.location}</span>
-                  <span className="text-[#171717] font-medium">{EDUCATION.status}</span>
                 </div>
               </div>
 
@@ -68,7 +64,7 @@ export default function AboutSection() {
                   Web App Security
                 </span>
                 <span className="px-3 py-1 rounded-full bg-[#F7F7F7] border border-[#E5E5E5]">
-                  Systems & C
+                  Systems & C++
                 </span>
                 <span className="px-3 py-1 rounded-full bg-[#F7F7F7] border border-[#E5E5E5]">
                   AI Security
@@ -80,14 +76,14 @@ export default function AboutSection() {
             <div className="lg:col-span-7 space-y-6 text-[#525252] text-sm sm:text-base leading-relaxed">
               <p>
                 I am <span className="text-[#171717] font-semibold">{PERSONAL_INFO.name}</span>, a
-                computer science student and software developer based in Dhaka, Bangladesh. {PERSONAL_INFO.bio}
+                computer science student {PERSONAL_INFO.bio}
               </p>
               <p>
-                My background building full-stack web applications with Next.js, native Android apps, and
-                systems programming in C gives me an attacker-aware perspective on software design.
-                Rather than treating security as an afterthought, I approach software from the codebase
-                up—evaluating input sanitization, authentication boundaries, and API integrations to prevent
-                vulnerabilities before deployment.
+                My hands-on background building native Android apps in Kotlin, systems programming in
+                C++, and modern web prototypes gives me a practical perspective on how software is
+                engineered. Rather than treating security as an afterthought, I approach software from
+                the codebase up—evaluating input validation, authentication boundaries, and AI API
+                integrations to identify and reduce vulnerabilities before deployment.
               </p>
 
               {/* 3 Core Technical Pillars */}

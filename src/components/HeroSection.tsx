@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
-import { PERSONAL_INFO, HERO_DATA } from "@/data/portfolioData";
+import { HERO_DATA } from "@/data/portfolioData";
 
 export default function HeroSection() {
   return (
@@ -13,22 +13,7 @@ export default function HeroSection() {
         {/* Main Light-Gray Hero Container (#EBEBEB, rounded-[2rem]) - Strictly Minimalist, Zero Glow Blobs */}
         <div className="relative bg-[#EBEBEB] border border-[#E5E5E5] rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 lg:p-12 overflow-hidden shadow-xs">
           <div className="relative flex flex-col lg:flex-row items-stretch gap-8 lg:gap-12">
-            {/* Far Left Edge: Thin Vertical Sidebar Label */}
-            <div className="hidden lg:flex flex-col justify-between items-center py-4 border-r border-[#D9D9D9] pr-6 select-none">
-              <span className="text-[11px] font-mono tracking-[0.25em] uppercase text-neutral-500 whitespace-nowrap [writing-mode:vertical-rl] rotate-180">
-                {PERSONAL_INFO.sidebarLabel}
-              </span>
-              <div className="w-[1px] h-16 bg-neutral-400/50 mt-6" />
-            </div>
-
-            {/* Mobile / Tablet indicator for sidebar label */}
-            <div className="lg:hidden flex items-center gap-2">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#171717]" />
-              <span className="text-[11px] font-mono tracking-[0.2em] uppercase text-neutral-600">
-                {PERSONAL_INFO.sidebarLabel}
-              </span>
-            </div>
-
+            
             {/* Left Content Column */}
             <div className="flex-1 flex flex-col justify-between z-10">
               <div>
@@ -59,12 +44,12 @@ export default function HeroSection() {
                   </h1>
 
                   <div className="flex items-center gap-2">
-                    <p className="text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-[#171717]">
+                    <p className="text-lg sm:text-xl lg:text-2xl font-medium tracking-tight text-[#171717] break-words">
                       {HERO_DATA.subGreeting}
                     </p>
                   </div>
 
-                  <p className="text-sm sm:text-base text-[#525252] max-w-xl leading-relaxed">
+                  <p className="text-sm sm:text-base text-[#525252] max-w-xl leading-relaxed break-words">
                     {HERO_DATA.bio}
                   </p>
                 </div>
@@ -102,11 +87,7 @@ export default function HeroSection() {
                   </div>
                 </Link>
 
-                <div className="flex items-center gap-2 text-[11px] text-[#525252] font-mono">
-                  <span className="w-2 h-2 rounded-full bg-[#171717]" />
-                  <span>DHAKA, BANGLADESH</span>
-                </div>
-              </div>
+                              </div>
             </div>
 
             {/* Right Side: Portrait Image + Mobile-Safe Glassmorphism Card */}
@@ -131,15 +112,15 @@ export default function HeroSection() {
                 <div className="w-full sm:w-auto mt-4 sm:mt-0 sm:absolute sm:bottom-2 sm:right-2 z-20 flex justify-center sm:justify-end">
                   <Link
                     href={HERO_DATA.statusCard.href}
-                    className="group inline-flex items-center justify-between gap-3.5 bg-[#171717]/95 hover:bg-[#171717] backdrop-blur-md border border-white/20 text-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-lg transition-colors duration-200"
+                    className="group inline-flex items-center justify-between gap-3.5 bg-[#171717]/95 hover:bg-[#171717] backdrop-blur-md border border-white/20 text-white px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl shadow-lg transition-colors duration-200 min-h-11"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-2 h-2 rounded-full bg-white" />
-                      <div className="flex flex-col text-left">
-                        <span className="text-xs sm:text-sm font-semibold tracking-tight text-white">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-2 h-2 rounded-full bg-white shrink-0" />
+                      <div className="flex flex-col text-left min-w-0">
+                        <span className="text-xs sm:text-sm font-semibold tracking-tight text-white break-words">
                           {HERO_DATA.statusCard.badge}
                         </span>
-                        <span className="text-[10px] text-neutral-400 font-mono">
+                        <span className="text-[10px] text-neutral-400 font-mono break-words">
                           {HERO_DATA.statusCard.note}
                         </span>
                       </div>

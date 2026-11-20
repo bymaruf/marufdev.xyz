@@ -17,7 +17,13 @@ export default function ContactFooter() {
   const [copied, setCopied] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [mailtoUrl, setMailtoUrl] = useState("");
-  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [formError, setFormError] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+    website: "",
+  });
 
   const handleCopyEmail = () => {
     navigator.clipboard.writeText(PERSONAL_INFO.email);
@@ -25,20 +31,48 @@ export default function ContactFooter() {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  // Reject strings containing characters commonly used for mailto/header injection.
+  // Only printable, non-control characters are permitted; CR/LF are stripped.
+  const sanitize = (value: string): string =>
+    value.replace(/[\r\n\t]/g, "").slice(0, 2000);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedName = formData.name.trim();
-    const trimmedEmail = formData.email.trim();
-    const trimmedMessage = formData.message.trim();
+    setFormError("");
+
+    // Honeypot: bots fill hidden fields; humans never see them.
+    if (formData.website.trim()) {
+      return;
+    }
+
+    const trimmedName = sanitize(formData.name);
+    const trimmedEmail = sanitize(formData.email);
+    const trimmedMessage = sanitize(formData.message);
 
     if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+      setFormError("Please complete all three fields — name, email, and project scope.");
+      return;
+    }
+
+    if (trimmedName.length < 2) {
+      setFormError("Name must be at least 2 characters.");
+      return;
+    }
+
+    if (trimmedMessage.length < 10) {
+      setFormError("Project scope must be at least 10 characters.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setFormError("Please enter a valid email address.");
       return;
     }
 
     // Construct direct mailto URI with pre-filled fields
     const subject = encodeURIComponent(`Project Scope Inquiry — ${trimmedName}`);
     const body = encodeURIComponent(
-      `Hi Maruf,\n\nName: ${trimmedName}\nEmail: ${trimmedEmail}\n\nProject Scope & Technical Requirements:\n${trimmedMessage}\n\n---\nSent via marufdev.xyz`
+      `Hi Maruf,\n\nName: ${trimmedName}\nEmail: ${trimmedEmail}\n\nProject Scope & Technical Requirements:\n${trimmedMessage}`
     );
     const link = `mailto:${PERSONAL_INFO.email}?subject=${subject}&body=${body}`;
     setMailtoUrl(link);
@@ -51,7 +85,7 @@ export default function ContactFooter() {
   const handleReset = () => {
     setFormSubmitted(false);
     setMailtoUrl("");
-    setFormData({ name: "", email: "", message: "" });
+    setFormData({ name: "", email: "", message: "", website: "" });
   };
 
   const scrollToTop = () => {
@@ -77,16 +111,16 @@ export default function ContactFooter() {
           <div className="relative z-10">
             {/* Top Bar: Status & Back to Top */}
             <div className="flex items-center justify-between pb-8 border-b border-neutral-800 mb-12">
-              <div className="flex items-center gap-2.5">
-                <span className="w-2 h-2 rounded-full bg-white" />
-                <span className="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400">
-                  {PERSONAL_INFO.status} &bull; 2026
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-white shrink-0" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-neutral-400 break-words">
+                  {PERSONAL_INFO.status}
                 </span>
               </div>
 
               <button
                 onClick={scrollToTop}
-                className="group flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                className="group flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors cursor-pointer min-h-11 min-w-11 justify-center"
                 aria-label="Back to top"
               >
                 <span>Back to top</span>
@@ -124,7 +158,7 @@ export default function ContactFooter() {
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
                       onClick={handleCopyEmail}
-                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium px-4 py-2.5 rounded-xl transition-colors border border-neutral-700 cursor-pointer"
+                      className="flex-1 sm:flex-none min-h-11 inline-flex items-center justify-center gap-1.5 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-medium px-4 py-2.5 rounded-xl transition-colors border border-neutral-700 cursor-pointer"
                       title="Copy email to clipboard"
                     >
                       {copied ? (
@@ -142,7 +176,7 @@ export default function ContactFooter() {
 
                     <a
                       href={`mailto:${PERSONAL_INFO.email}`}
-                      className="inline-flex items-center justify-center p-2.5 bg-white text-[#171717] hover:bg-neutral-200 rounded-xl transition-colors"
+                      className="min-h-11 min-w-11 inline-flex items-center justify-center p-2.5 bg-white text-[#171717] hover:bg-neutral-200 rounded-xl transition-colors"
                       title="Send email via mail client"
                     >
                       <ArrowUpRight className="w-4 h-4" />
@@ -162,7 +196,7 @@ export default function ContactFooter() {
                         href={link.url}
                         target={link.url.startsWith("mailto:") ? "_self" : "_blank"}
                         rel={link.url.startsWith("mailto:") ? undefined : "noopener noreferrer"}
-                        className="group flex flex-col justify-between p-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 transition-colors duration-200"
+                        className="group min-h-11 flex flex-col justify-between p-4 rounded-2xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 transition-colors duration-200"
                       >
                         <div className="flex items-center justify-between mb-3 text-neutral-400 group-hover:text-white transition-colors">
                           {getPlatformIcon(link.platform)}
@@ -226,7 +260,24 @@ export default function ContactFooter() {
                       </div>
                     </div>
                   ) : (
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                      {formError && (
+                        <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/40 text-red-200 text-xs font-medium">
+                          {formError}
+                        </div>
+                      )}
+                      {/* Honeypot field — hidden from real users, filled only by bots */}
+                      <input
+                        type="text"
+                        id="website"
+                        name="website"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                        autoComplete="off"
+                        value={formData.website}
+                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        className="absolute opacity-0 pointer-events-none w-0 h-0"
+                      />
                       <div>
                         <label
                           htmlFor="name"
@@ -242,7 +293,7 @@ export default function ContactFooter() {
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           placeholder="e.g. Alex"
-                          className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors"
+                          className="w-full min-h-11 px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors"
                         />
                       </div>
 
@@ -260,7 +311,7 @@ export default function ContactFooter() {
                           value={formData.email}
                           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           placeholder="client@company.com"
-                          className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors"
+                          className="w-full min-h-11 px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors"
                         />
                       </div>
 
@@ -279,13 +330,13 @@ export default function ContactFooter() {
                           value={formData.message}
                           onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                           placeholder="Describe the application scope, timeline, and tech stack..."
-                          className="w-full px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors resize-none"
+                          className="w-full min-h-24 px-4 py-3 bg-neutral-950 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-500 transition-colors resize-none"
                         />
                       </div>
 
                       <button
                         type="submit"
-                        className="w-full inline-flex items-center justify-center gap-2 bg-white hover:bg-neutral-200 text-[#171717] text-xs font-semibold py-3.5 rounded-xl transition-colors duration-200 cursor-pointer"
+                        className="w-full min-h-11 inline-flex items-center justify-center gap-2 bg-white hover:bg-neutral-200 text-[#171717] text-xs font-semibold py-3.5 rounded-xl transition-colors duration-200 cursor-pointer"
                       >
                         <span>Send Project Scope</span>
                         <Send className="w-3.5 h-3.5" />
@@ -298,12 +349,12 @@ export default function ContactFooter() {
 
             {/* Bottom Bar: Copyright & Domain info */}
             <div className="pt-8 border-t border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-mono">
-              <div className="flex items-center gap-2">
-                <span>{PERSONAL_INFO.domain}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="break-words">{PERSONAL_INFO.domain}</span>
                 <span>&bull;</span>
-                <span>{PERSONAL_INFO.name}</span>
+                <span className="break-words">{PERSONAL_INFO.name}</span>
               </div>
-              <p>{FOOTER_DATA.copyright}</p>
+              <p className="break-words text-center sm:text-right">{FOOTER_DATA.copyright}</p>
             </div>
           </div>
         </div>

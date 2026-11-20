@@ -41,7 +41,7 @@ export default function ServicesSection() {
           </div>
           <p className="text-sm text-[#525252] max-w-md">
             Applying practical software engineering knowledge to evaluate web vulnerabilities, secure
-            Gemini AI integrations, and build defensible software foundations.
+            AI API integrations, and build defensible software foundations.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ export default function ServicesSection() {
           {SERVICES_DATA.map((service) => (
             <div
               key={service.id}
-              className="group bg-[#EBEBEB] border border-[#E5E5E5] hover:border-neutral-400 rounded-[2rem] p-7 sm:p-8 flex flex-col justify-between transition-colors duration-200 shadow-xs"
+              className="group bg-[#EBEBEB] border border-[#E5E5E5] hover:border-neutral-400 rounded-[2rem] p-7 sm:p-8 flex flex-col justify-between transition-colors duration-200 shadow-xs min-w-0"
             >
               <div>
                 {/* Top: Number & Icon */}
@@ -64,15 +64,15 @@ export default function ServicesSection() {
                 </div>
 
                 {/* Title & Tagline */}
-                <h3 className="text-xl sm:text-2xl font-semibold text-[#171717] tracking-tight mb-2">
+                <h3 className="text-xl sm:text-2xl font-semibold text-[#171717] tracking-tight mb-2 break-words">
                   {service.title}
                 </h3>
-                <p className="text-xs font-medium text-neutral-600 mb-4 font-mono">
+                <p className="text-xs font-medium text-neutral-600 mb-4 font-mono break-words">
                   {service.tagline}
                 </p>
 
                 {/* Description */}
-                <p className="text-sm text-[#525252] leading-relaxed mb-6">
+                <p className="text-sm text-[#525252] leading-relaxed mb-6 break-words">
                   {service.description}
                 </p>
               </div>
