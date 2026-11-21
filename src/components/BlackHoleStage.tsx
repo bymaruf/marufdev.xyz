@@ -15,10 +15,10 @@ const DESKTOP_STOPS: Stop[] = [
 ];
 
 const MOBILE_STOPS: Stop[] = [
-  { x: 0, y: 18, scale: 1.15 },
-  { x: 0, y: 0, scale: 1.35 },
-  { x: 0, y: 0, scale: 1.15 },
-  { x: 0, y: 30, scale: 2.8 },
+  { x: 0, y: 25, scale: 1.28 },
+  { x: 0, y: 2, scale: 1.45 },
+  { x: 0, y: 2, scale: 1.25 },
+  { x: 0, y: 36, scale: 4.6 },
 ];
 
 const CROSSFADE_SEC = 0.85;

@@ -17,7 +17,7 @@ import {
 } from "@/data/portfolioData";
 
 const ctaPill =
-  "inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] hover:border-white/25 text-sm font-medium text-white transition-all";
+  "inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] hover:border-white/25 text-sm font-medium text-white transition-all max-md:gap-1.5 max-md:px-4 max-md:py-2 max-md:text-xs";
 
 const legible = "drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]";
 const SECTIONS: SectionId[] = ["home", "focus", "projects", "contact"];
@@ -198,20 +198,20 @@ export default function Home() {
         {/* 01 — Overview */}
         <section
           id="home"
-          className="flex min-h-screen snap-start snap-always items-center px-6 py-24 sm:px-10 lg:px-16"
+          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="w-full max-w-2xl">
-            <h1 className="mt-6 text-balance text-5xl font-medium leading-none tracking-[-0.045em] text-white sm:text-7xl lg:text-8xl">
+            <h1 className="mt-6 text-balance text-5xl font-medium leading-none tracking-[-0.045em] text-white sm:text-7xl lg:text-8xl max-md:mt-3 max-md:text-4xl">
               {PERSONAL_INFO.name}
             </h1>
-            <p className="text-on-video mt-5 text-base font-medium tracking-tight text-amber-300/85 sm:text-lg">
+            <p className="text-on-video mt-5 text-base font-medium tracking-tight text-amber-300/85 sm:text-lg max-md:mt-3 max-md:text-sm">
               {PERSONAL_INFO.role}
             </p>
-            <p className="text-on-video mt-5 max-w-lg text-sm leading-7 text-white/75 sm:text-base">
+            <p className="text-on-video mt-5 max-w-lg text-sm leading-7 text-white/75 sm:text-base max-md:mt-3 max-md:text-xs max-md:leading-6">
               {PERSONAL_INFO.about}
             </p>
 
-            <div className="text-on-video mt-9 flex flex-wrap items-center gap-3">
+            <div className="text-on-video mt-9 flex flex-wrap items-center gap-3 max-md:mt-6">
               <button
                 type="button"
                 onClick={() => scrollToSection("focus")}
@@ -245,10 +245,10 @@ export default function Home() {
         {/* 02 — Core focus */}
         <section
           id="focus"
-          className="flex min-h-screen snap-start snap-always items-center px-6 py-24 sm:px-10 lg:px-16"
+          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="mx-auto w-full max-w-6xl">
-            <header className="mb-10 flex flex-wrap items-end justify-between gap-5">
+            <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3">
               <div>
                 <h2 className={`${legible} mt-3 text-3xl font-medium tracking-tight text-white sm:text-4xl`}>
                   Three areas of focus
@@ -259,11 +259,11 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0">
               {FOCUS_PILLARS.map((pillar) => (
                 <article
                   key={pillar.number}
-                  className="rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8"
+                  className="min-w-[84vw] snap-center rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0 [@media(max-width:767px)_and_(max-height:700px)]:p-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className={`${legible} font-mono text-xs tabular-nums text-amber-200/70`}>
@@ -281,7 +281,7 @@ export default function Home() {
               ))}
             </div>
 
-            <section className="mt-10 border-t border-white/10 pt-8">
+            <section className="mt-10 border-t border-white/10 pt-8 max-md:mt-5 max-md:pt-4">
               <h3 className={`${legible} mb-4 text-xs font-medium text-white/55`}>
                 Tech stack
               </h3>
@@ -289,7 +289,7 @@ export default function Home() {
                 {TECH_STACK.map((tech) => (
                   <span
                     key={tech}
-                    className={`${legible} rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-xs text-white/80 backdrop-blur-md`}
+                    className={`${legible} rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-xs text-white/80 backdrop-blur-md max-md:px-3 max-md:py-1.5`}
                   >
                     {tech}
                   </span>
@@ -302,10 +302,10 @@ export default function Home() {
         {/* 03 — Featured projects */}
         <section
           id="projects"
-          className="flex min-h-screen snap-start snap-always items-center px-6 py-24 sm:px-10 lg:px-16"
+          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="mx-auto w-full max-w-6xl">
-            <header className="mb-10 flex flex-wrap items-end justify-between gap-5">
+            <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3">
               <div>
                 <h2 className={`${legible} mt-3 text-3xl font-medium tracking-tight text-white sm:text-4xl`}>
                   Open-source work
@@ -316,11 +316,11 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0">
               {PROJECTS.map((project) => (
                 <article
                   key={project.id}
-                  className="flex h-full flex-col rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8"
+                  className="flex h-full min-w-[84vw] snap-center flex-col rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0"
                 >
                   <p className={`${legible} font-mono text-xs leading-5 text-amber-200/70`}>
                     {project.category}
@@ -360,19 +360,19 @@ export default function Home() {
         {/* 04 — Beyond the horizon */}
         <section
           id="contact"
-          className="flex min-h-screen snap-start snap-always items-center px-6 py-24 sm:px-10 lg:px-16"
+          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="mx-auto w-full max-w-3xl">
-            <h2 className="text-on-video mt-4 text-balance text-4xl font-medium tracking-[-0.035em] text-white sm:text-6xl">
+            <h2 className="text-on-video mt-4 text-balance text-4xl font-medium tracking-[-0.035em] text-white sm:text-6xl max-md:mt-0 max-md:text-3xl">
               Beyond the horizon
             </h2>
-            <p className="text-on-video mt-5 max-w-xl text-base leading-7 text-white/70">
+            <p className="text-on-video mt-5 max-w-xl text-base leading-7 text-white/70 max-md:mt-3 max-md:text-sm max-md:leading-6">
               {PERSONAL_INFO.role} working across application security, LLM hardening,
               and secure software systems.
             </p>
 
-            <div className="mt-10 divide-y divide-white/10 rounded-2xl border border-white/15 bg-black/55 p-6 backdrop-blur-xl sm:p-8">
-              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6">
+            <div className="mt-6 md:mt-10 max-md:space-y-4 divide-y divide-white/10 rounded-2xl border border-white/15 bg-black/55 p-5 backdrop-blur-xl md:p-8">
+              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6 max-md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-2">
                 <span className="flex items-center gap-2 text-xs font-medium text-white/50">
                   <GraduationCap className="h-4 w-4" />
                   Education
@@ -382,7 +382,7 @@ export default function Home() {
                   <p className="mt-1 text-sm text-white/65">{EDUCATION.institution}</p>
                 </div>
               </div>
-              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6">
+              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6 max-md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-2">
                 <span className="flex items-center gap-2 text-xs font-medium text-white/50">
                   <Mail className="h-4 w-4" />
                   Contact
@@ -394,7 +394,7 @@ export default function Home() {
                   {PERSONAL_INFO.email}
                 </a>
               </div>
-              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6">
+              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6 max-md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-2">
                 <span className="flex items-center gap-2 text-xs font-medium text-white/50">
                   <GithubIcon className="h-4 w-4" />
                   GitHub
@@ -414,13 +414,13 @@ export default function Home() {
             <button
               type="button"
               onClick={() => scrollToSection("home")}
-              className="group mt-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-black/75 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300"
+              className="group mt-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-black/75 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300 max-md:mt-6 [@media(max-width:767px)_and_(max-height:700px)]:mt-4"
             >
               <ArrowUp className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
               Back to Top
             </button>
 
-            <p className="text-on-video mt-12 font-mono text-xs text-white/60">
+            <p className="text-on-video mt-12 font-mono text-xs text-white/60 max-md:mt-6 [@media(max-width:767px)_and_(max-height:700px)]:mt-4">
               © {new Date().getFullYear()} {PERSONAL_INFO.name} · {PERSONAL_INFO.domain}
             </p>
           </div>
