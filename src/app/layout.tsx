@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
 import { PERSONAL_INFO } from "@/data/portfolioData";
 
 const description =
@@ -52,6 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className="bg-black text-white antialiased selection:bg-amber-300 selection:text-zinc-950">
+        <Navbar />
         {children}
       </body>
     </html>

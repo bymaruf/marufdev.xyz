@@ -21,19 +21,9 @@
   }
 }
 
-/* Keeps white type crisp where the accretion disk is brightest. */
-.bh-legible {
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
-}
-
-/* Warm solar corona that carries the disk's amber light into the finale. */
-.bh-corona {
-  background: radial-gradient(
-    ellipse 58% 42% at 50% 2%,
-    rgba(232, 176, 96, 0.32) 0%,
-    rgba(232, 176, 96, 0.1) 42%,
-    rgba(232, 176, 96, 0) 76%
-  );
+/* Keeps white type readable where the accretion disk passes behind it. */
+.text-on-video {
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.95);
 }
 
 ::-webkit-scrollbar {

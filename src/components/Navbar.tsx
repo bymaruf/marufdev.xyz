@@ -1,63 +1,52 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import GithubIcon from "@/components/icons/GithubIcon";
 import { PERSONAL_INFO } from "@/data/portfolioData";
 
-interface NavbarProps {
-  light: boolean;
-  onNavigate(progress: number): void;
-}
-
-const NAV_ITEMS = [
-  { label: "Focus", progress: 0.34 },
-  { label: "Projects", progress: 0.6 },
-  { label: "Contact", progress: 0.94 },
+const ROUTES = [
+  { href: "/", label: "Home" },
+  { href: "/focus", label: "Focus" },
+  { href: "/projects", label: "Projects" },
+  { href: "/contact", label: "Contact" },
 ];
 
-export default function Navbar({ light, onNavigate }: NavbarProps) {
+export default function Navbar() {
+  const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const go = (progress: number) => {
-    setMenuOpen(false);
-    onNavigate(progress);
-  };
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-300 ${
-        light
-          ? "border-amber-900/10 bg-[#faf6ee]/85 text-zinc-950 backdrop-blur-xl"
-          : "border-white/10 bg-black/40 text-white backdrop-blur-xl"
-      }`}
-    >
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/75 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-6 sm:px-10 lg:px-16">
-        <button
-          type="button"
-          onClick={() => go(0)}
-          className={`rounded-md text-base font-semibold tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
-            light ? "text-zinc-950" : "text-white"
-          }`}
-          aria-label="marufdev — return to the start"
+        <Link
+          href="/"
+          onClick={() => setMenuOpen(false)}
+          className="rounded-md text-base font-semibold tracking-tight text-white outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
+          aria-label="marufdev — home"
         >
           marufdev
-        </button>
+        </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Chapters">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => go(item.progress)}
-              className={`min-h-11 rounded-lg px-4 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
-                light
-                  ? "text-zinc-600 hover:bg-amber-900/5 hover:text-zinc-950"
-                  : "text-white/65 hover:bg-white/10 hover:text-white"
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
+          {ROUTES.map((route) => (
+            <Link
+              key={route.href}
+              href={route.href}
+              aria-current={isActive(route.href) ? "page" : undefined}
+              className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-300 ${
+                isActive(route.href)
+                  ? "bg-white/10 text-white"
+                  : "text-white/60 hover:bg-white/5 hover:text-white"
               }`}
             >
-              {item.label}
-            </button>
+              {route.label}
+            </Link>
           ))}
         </nav>
 
@@ -66,11 +55,7 @@ export default function Navbar({ light, onNavigate }: NavbarProps) {
             href={PERSONAL_INFO.github}
             target="_blank"
             rel="noopener noreferrer"
-            className={`hidden min-h-11 items-center gap-2 rounded-lg px-3 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-300 sm:inline-flex ${
-              light
-                ? "text-zinc-600 hover:bg-amber-900/5 hover:text-zinc-950"
-                : "text-white/65 hover:bg-white/10 hover:text-white"
-            }`}
+            className="hidden items-center gap-2 rounded-full px-3.5 py-1.5 text-sm text-white/60 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300 sm:inline-flex"
           >
             <GithubIcon className="h-4 w-4" />
             GitHub
@@ -80,11 +65,7 @@ export default function Navbar({ light, onNavigate }: NavbarProps) {
           <button
             type="button"
             onClick={() => setMenuOpen((open) => !open)}
-            className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-300 md:hidden ${
-              light
-                ? "text-zinc-800 hover:bg-amber-900/5"
-                : "text-white hover:bg-white/10"
-            }`}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-white outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-300 md:hidden"
             aria-expanded={menuOpen}
             aria-label="Toggle navigation"
           >
@@ -95,37 +76,32 @@ export default function Navbar({ light, onNavigate }: NavbarProps) {
 
       {menuOpen && (
         <nav
-          className={`border-t px-6 pb-5 pt-2 md:hidden ${
-            light
-              ? "border-amber-900/10 bg-[#faf6ee]/95"
-              : "border-white/10 bg-black/95"
-          }`}
-          aria-label="Chapters"
+          className="border-t border-white/10 bg-black/95 px-6 pb-5 pt-2 md:hidden"
+          aria-label="Main navigation"
         >
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => go(item.progress)}
-              className={`flex min-h-11 w-full items-center rounded-lg px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
-                light
-                  ? "text-zinc-700 hover:bg-amber-900/5"
-                  : "text-white/80 hover:bg-white/10"
+          {ROUTES.map((route) => (
+            <Link
+              key={route.href}
+              href={route.href}
+              onClick={() => setMenuOpen(false)}
+              aria-current={isActive(route.href) ? "page" : undefined}
+              className={`inline-flex w-full items-center px-3.5 py-1.5 rounded-full text-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
+                isActive(route.href)
+                  ? "bg-white/10 text-white"
+                  : "text-white/70 hover:bg-white/5"
               }`}
             >
-              {item.label}
-            </button>
+              {route.label}
+            </Link>
           ))}
           <a
             href={PERSONAL_INFO.github}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm ${
-              light ? "text-zinc-700" : "text-white/80"
-            }`}
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm text-white/70"
           >
             <GithubIcon className="h-4 w-4" />
-            GitHub (@bymaruf)
+            GitHub ({PERSONAL_INFO.githubHandle})
             <ArrowUpRight className="h-3.5 w-3.5" />
           </a>
         </nav>
