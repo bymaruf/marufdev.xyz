@@ -1,52 +1,57 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 import GithubIcon from "@/components/icons/GithubIcon";
+import {
+  useActiveSection,
+  type SectionId,
+} from "@/components/ActiveSectionContext";
 import { PERSONAL_INFO } from "@/data/portfolioData";
 
-const ROUTES = [
-  { href: "/", label: "Home" },
-  { href: "/focus", label: "Focus" },
-  { href: "/projects", label: "Projects" },
-  { href: "/contact", label: "Contact" },
+const NAV_ITEMS: { id: SectionId; label: string }[] = [
+  { id: "home", label: "Home" },
+  { id: "focus", label: "Focus" },
+  { id: "projects", label: "Projects" },
+  { id: "contact", label: "Contact" },
 ];
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const { activeSection, scrollToSection } = useActiveSection();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const isActive = (href: string) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const go = (id: SectionId) => {
+    setMenuOpen(false);
+    scrollToSection(id);
+  };
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/75 backdrop-blur-xl">
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-6 sm:px-10 lg:px-16">
-        <Link
-          href="/"
-          onClick={() => setMenuOpen(false)}
+        <button
+          type="button"
+          onClick={() => go("home")}
           className="rounded-md text-base font-semibold tracking-tight text-white outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
           aria-label="MarufDev — home"
         >
           MarufDev
-        </Link>
+        </button>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
-          {ROUTES.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              aria-current={isActive(route.href) ? "page" : undefined}
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => go(item.id)}
+              aria-current={activeSection === item.id ? "page" : undefined}
               className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-amber-300 ${
-                isActive(route.href)
+                activeSection === item.id
                   ? "bg-white/10 text-white"
                   : "text-white/60 hover:bg-white/5 hover:text-white"
               }`}
             >
-              {route.label}
-            </Link>
+              {item.label}
+            </button>
           ))}
         </nav>
 
@@ -79,20 +84,20 @@ export default function Navbar() {
           className="border-t border-white/10 bg-black/95 px-6 pb-5 pt-2 md:hidden"
           aria-label="Main navigation"
         >
-          {ROUTES.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              onClick={() => setMenuOpen(false)}
-              aria-current={isActive(route.href) ? "page" : undefined}
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => go(item.id)}
+              aria-current={activeSection === item.id ? "page" : undefined}
               className={`inline-flex w-full items-center px-3.5 py-1.5 rounded-full text-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
-                isActive(route.href)
+                activeSection === item.id
                   ? "bg-white/10 text-white"
                   : "text-white/70 hover:bg-white/5"
               }`}
             >
-              {route.label}
-            </Link>
+              {item.label}
+            </button>
           ))}
           <a
             href={PERSONAL_INFO.github}

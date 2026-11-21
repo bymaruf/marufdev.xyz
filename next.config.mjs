@@ -78,6 +78,10 @@ const devHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Next.js 16 blocks dev-only assets from hosts other than the one the
+  // server was started with. Allow the local IP so HMR isn't rejected
+  // (which surfaces as a console error / dev-indicator "1 Issue").
+  allowedDevOrigins: ["127.0.0.1", "192.168.**", "*.local"],
   images: {
     unoptimized: true,
   },
