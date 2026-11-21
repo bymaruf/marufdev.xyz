@@ -28,9 +28,9 @@ export default function Navbar() {
           href="/"
           onClick={() => setMenuOpen(false)}
           className="rounded-md text-base font-semibold tracking-tight text-white outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
-          aria-label="marufdev — home"
+          aria-label="MarufDev — home"
         >
-          marufdev
+          MarufDev
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">

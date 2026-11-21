@@ -4,16 +4,29 @@ import GithubIcon from "@/components/icons/GithubIcon";
 import BlackHoleSegment from "@/components/BlackHoleSegment";
 import { PERSONAL_INFO } from "@/data/portfolioData";
 
+const ctaPill =
+  "inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] hover:border-white/25 text-sm font-medium text-white transition-all";
+
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-x-clip bg-black">
-      {/* Segment A — edge-on lensing, pushed right so it stays fully open beside the text. */}
-      <BlackHoleSegment startTime={0} endTime={8} className="opacity-100 lg:translate-x-[20%]" />
+      {/* Edge-on double halo, held on the seamless loop so it never rotates into the vortex. */}
+      <BlackHoleSegment
+        src="/blackhole-horizon-loop.mp4"
+        startTime={0}
+        endTime={8}
+        className="opacity-100 [--bh-hero-x:0%] [--bh-hero-y:18%] [--bh-hero-scale:1.15] md:[--bh-hero-x:22%] md:[--bh-hero-y:0%] md:[--bh-hero-scale:1.48]"
+        style={{
+          transform:
+            "translate(var(--bh-hero-x), var(--bh-hero-y)) scale(var(--bh-hero-scale))",
+          transformOrigin: "50% 50%",
+        }}
+      />
 
       <div className="relative z-10 flex min-h-screen w-full max-w-2xl flex-col justify-center px-6 py-28 sm:px-10 lg:px-16">
         <p className="text-on-video flex items-center gap-2.5 text-xs font-medium tracking-wide text-white/60">
           <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
-          marufdev / portfolio
+          01 / Overview
         </p>
 
         <h1 className="mt-6 text-balance text-5xl font-medium leading-none tracking-[-0.045em] text-white sm:text-7xl lg:text-8xl">
@@ -26,17 +39,17 @@ export default function Home() {
           {PERSONAL_INFO.about}
         </p>
 
-        <div className="mt-9 flex flex-wrap items-center gap-3">
+        <div className="text-on-video mt-9 flex flex-wrap items-center gap-3">
           <Link
             href="/focus"
-            className="group inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-200/25 bg-white/[0.03] px-5 text-sm font-medium text-white backdrop-blur-md outline-none transition-colors hover:border-amber-200/50 hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-amber-300"
+            className={`group ${ctaPill} outline-none focus-visible:ring-2 focus-visible:ring-amber-300`}
           >
             Core focus
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
           </Link>
           <Link
             href="/projects"
-            className="group inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[0.03] px-5 text-sm font-medium text-white/85 backdrop-blur-md outline-none transition-colors hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+            className={`group ${ctaPill} outline-none focus-visible:ring-2 focus-visible:ring-amber-300`}
           >
             Projects
             <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -45,7 +58,7 @@ export default function Home() {
             href={PERSONAL_INFO.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm text-white/70 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+            className={`${ctaPill} outline-none focus-visible:ring-2 focus-visible:ring-amber-300`}
           >
             <GithubIcon className="h-4 w-4" />
             GitHub ({PERSONAL_INFO.githubHandle})
@@ -53,7 +66,6 @@ export default function Home() {
           </a>
         </div>
 
-        <p className="text-on-video mt-12 font-mono text-xs text-white/45">01 / 04</p>
       </div>
     </main>
   );

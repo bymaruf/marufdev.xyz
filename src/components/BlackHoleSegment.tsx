@@ -1,18 +1,24 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 type BlackHoleSegmentProps = {
   startTime: number;
   /** Kept in the page API; native loop now carries playback past this point. */
   endTime: number;
-  /** Applied to the video itself (opacity, desktop placement). */
+  /** Applied to the video itself (opacity, placement). */
   className?: string;
+  /** Optional inline transform override for per-route framing. */
+  style?: CSSProperties;
+  /** Defaults to the full clip; the hero uses the edge-on seamless loop. */
+  src?: string;
 };
 
 export default function BlackHoleSegment({
   startTime,
   className = "",
+  style,
+  src = "/blackhole.mp4",
 }: BlackHoleSegmentProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hasSeeked = useRef(false);
@@ -44,7 +50,7 @@ export default function BlackHoleSegment({
     >
       <video
         ref={videoRef}
-        src="/blackhole.mp4"
+        src={src}
         poster="/blackhole-poster.jpg"
         autoPlay
         muted
@@ -53,6 +59,7 @@ export default function BlackHoleSegment({
         preload="auto"
         onLoadedMetadata={handleLoadedMetadata}
         className={`absolute inset-0 h-full w-full object-contain ${className}`}
+        style={style}
       />
     </div>
   );

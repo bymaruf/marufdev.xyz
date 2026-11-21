@@ -64,7 +64,7 @@ export default function ContactPage() {
 
         <Link
           href="/"
-          className="group mt-10 inline-flex min-h-11 w-fit items-center gap-2 rounded-xl border border-white/12 bg-white/[0.03] px-5 text-sm font-medium text-white/85 backdrop-blur-md outline-none transition-colors hover:border-white/25 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+          className="group mt-10 inline-flex w-fit items-center gap-2 px-5 py-2.5 rounded-full border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] text-sm font-medium text-white transition-all outline-none focus-visible:ring-2 focus-visible:ring-amber-300"
         >
           <ArrowUp className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
           Return to Orbit

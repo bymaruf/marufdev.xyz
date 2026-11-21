@@ -20,7 +20,7 @@ export default function FocusPage() {
             </h1>
           </div>
           <p className={`${legible} max-w-sm text-sm leading-6 text-white/70`}>
-            AppSec, LLM hardening, and resilient systems — from the code up.
+            Core areas across AI security, application defense, and software engineering.
           </p>
         </header>
 
