@@ -1,119 +1,134 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
-import { NAVIGATION_LINKS } from "@/data/portfolioData";
+import GithubIcon from "@/components/icons/GithubIcon";
+import { PERSONAL_INFO } from "@/data/portfolioData";
 
-export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+interface NavbarProps {
+  light: boolean;
+  onNavigate(progress: number): void;
+}
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+const NAV_ITEMS = [
+  { label: "Focus", progress: 0.34 },
+  { label: "Projects", progress: 0.6 },
+  { label: "Contact", progress: 0.94 },
+];
 
-  // Lock body scroll while the mobile drawer is open
-  useEffect(() => {
-    if (!mobileMenuOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [mobileMenuOpen]);
+export default function Navbar({ light, onNavigate }: NavbarProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const go = (progress: number) => {
+    setMenuOpen(false);
+    onNavigate(progress);
+  };
 
   return (
-    <header className="sticky top-0 z-50 w-full pt-4 px-4 sm:px-6 lg:px-8 transition-all duration-300">
-      <div
-        className={`max-w-7xl mx-auto rounded-full transition-all duration-300 ${
-          scrolled
-            ? "bg-white/80 backdrop-blur-md shadow-sm border border-[#E5E5E5] py-3 px-5 sm:px-7"
-            : "bg-white/60 backdrop-blur-sm border border-transparent py-4 px-4 sm:px-6"
-        }`}
-      >
-        <div className="flex items-center justify-between">
-          {/* Left: Logo mark */}
-          <Link
-            href="#home"
-            className="group flex items-center gap-2.5 focus:outline-none"
-            aria-label="MarufDev Homepage"
-          >
-            <div className="w-9 h-9 rounded-full bg-[#171717] text-white flex items-center justify-center font-bold text-sm tracking-tight transition-transform duration-300 group-hover:scale-105">
-              M
-            </div>
-            <div className="flex flex-col">
-              <span className="text-base font-semibold tracking-tight text-[#171717]">
-                MarufDev
-              </span>
-            </div>
-          </Link>
+    <header
+      className={`fixed inset-x-0 top-0 z-50 border-b transition-colors duration-300 ${
+        light
+          ? "border-amber-900/10 bg-[#faf6ee]/85 text-zinc-950 backdrop-blur-xl"
+          : "border-white/10 bg-black/40 text-white backdrop-blur-xl"
+      }`}
+    >
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-4 px-6 sm:px-10 lg:px-16">
+        <button
+          type="button"
+          onClick={() => go(0)}
+          className={`rounded-md text-base font-semibold tracking-tight outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
+            light ? "text-zinc-950" : "text-white"
+          }`}
+          aria-label="marufdev — return to the start"
+        >
+          marufdev
+        </button>
 
-          {/* Center: Desktop Navigation Anchor Links */}
-          <nav className="hidden md:flex items-center gap-1 bg-[#EBEBEB]/80 px-2 py-1.5 rounded-full border border-[#E5E5E5]/60">
-            {NAVIGATION_LINKS.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="px-4 py-1.5 text-xs font-medium text-[#525252] hover:text-[#171717] rounded-full hover:bg-white/80 transition-all duration-200"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* Right: CTA button */}
-          <div className="hidden sm:flex items-center gap-3">
-            <Link
-              href="#contact"
-              className="group inline-flex items-center gap-1.5 bg-[#171717] hover:bg-neutral-800 text-white text-xs font-medium px-5 py-2.5 rounded-full shadow-sm transition-all duration-200 hover:shadow-md"
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Chapters">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => go(item.progress)}
+              className={`min-h-11 rounded-lg px-4 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
+                light
+                  ? "text-zinc-600 hover:bg-amber-900/5 hover:text-zinc-950"
+                  : "text-white/65 hover:bg-white/10 hover:text-white"
+              }`}
             >
-              <span>Start a project</span>
-              <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </Link>
-          </div>
+              {item.label}
+            </button>
+          ))}
+        </nav>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden min-h-11 min-w-11 p-2 rounded-full text-[#171717] hover:bg-[#EBEBEB] transition-colors focus:outline-none"
-            aria-label="Toggle navigation menu"
+        <div className="flex items-center gap-2">
+          <a
+            href={PERSONAL_INFO.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`hidden min-h-11 items-center gap-2 rounded-lg px-3 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-300 sm:inline-flex ${
+              light
+                ? "text-zinc-600 hover:bg-amber-900/5 hover:text-zinc-950"
+                : "text-white/65 hover:bg-white/10 hover:text-white"
+            }`}
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            <GithubIcon className="h-4 w-4" />
+            GitHub
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
+
+          <button
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-amber-300 md:hidden ${
+              light
+                ? "text-zinc-800 hover:bg-amber-900/5"
+                : "text-white hover:bg-white/10"
+            }`}
+            aria-expanded={menuOpen}
+            aria-label="Toggle navigation"
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden mt-2 max-w-7xl mx-auto bg-white/95 backdrop-blur-xl border border-[#E5E5E5] rounded-3xl p-5 shadow-xl transition-all animate-in fade-in slide-in-from-top-2">
-          <nav className="flex flex-col gap-2">
-            {NAVIGATION_LINKS.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="min-h-11 px-4 py-3 text-sm font-medium text-[#171717] hover:bg-[#F7F7F7] rounded-2xl transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="pt-3 mt-1 border-t border-[#E5E5E5]">
-              <Link
-                href="#contact"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full min-h-11 inline-flex items-center justify-center gap-2 bg-[#171717] text-white text-sm font-medium py-3 rounded-2xl hover:bg-neutral-800 transition-colors"
-              >
-                <span>Start a project</span>
-                <ArrowUpRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </nav>
-        </div>
+      {menuOpen && (
+        <nav
+          className={`border-t px-6 pb-5 pt-2 md:hidden ${
+            light
+              ? "border-amber-900/10 bg-[#faf6ee]/95"
+              : "border-white/10 bg-black/95"
+          }`}
+          aria-label="Chapters"
+        >
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => go(item.progress)}
+              className={`flex min-h-11 w-full items-center rounded-lg px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
+                light
+                  ? "text-zinc-700 hover:bg-amber-900/5"
+                  : "text-white/80 hover:bg-white/10"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+          <a
+            href={PERSONAL_INFO.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm ${
+              light ? "text-zinc-700" : "text-white/80"
+            }`}
+          >
+            <GithubIcon className="h-4 w-4" />
+            GitHub (@bymaruf)
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </a>
+        </nav>
       )}
     </header>
   );

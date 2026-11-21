@@ -1,5 +1,6 @@
 import { defineConfig } from "eslint/config";
 import tsParser from "@typescript-eslint/parser";
+import tseslint from "typescript-eslint";
 
 export default defineConfig({
   files: ["**/*.ts", "**/*.tsx"],
@@ -11,7 +12,10 @@ export default defineConfig({
       ecmaFeatures: { jsx: true },
     },
   },
+  plugins: {
+    "@typescript-eslint": tseslint.plugin,
+  },
   rules: {
-    "no-unused-vars": "warn",
+    "@typescript-eslint/no-unused-vars": "warn",
   },
 });

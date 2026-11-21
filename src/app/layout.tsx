@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { PERSONAL_INFO } from "@/data/portfolioData";
 
+const description =
+  "Portfolio of Maruf Hasan — AI Engineer & Cybersecurity Builder. Focused on LLM hardening, application security, and secure software systems.";
+
 export const metadata: Metadata = {
-  title: "Maruf Hasan — Cybersecurity & AI Security",
-  description:
-    "Portfolio of Maruf Hasan — Cybersecurity & AI Security. Focused on LLM hardening, application security (AppSec), and secure software systems.",
+  metadataBase: new URL(`https://${PERSONAL_INFO.domain}`),
+  title: `${PERSONAL_INFO.name} — ${PERSONAL_INFO.role}`,
+  description,
   keywords: [
     "Maruf Hasan",
-    "MarufDev",
-    "marufdev.xyz",
+    "marufdev",
+    PERSONAL_INFO.domain,
     "Cybersecurity",
     "AI Security",
     "AppSec",
@@ -22,19 +25,17 @@ export const metadata: Metadata = {
   authors: [{ name: PERSONAL_INFO.name, url: `https://${PERSONAL_INFO.domain}` }],
   creator: PERSONAL_INFO.name,
   openGraph: {
-    title: `${PERSONAL_INFO.name} — Cybersecurity & AI Security`,
-    description:
-      "Portfolio of Maruf Hasan — Cybersecurity & AI Security. Focused on LLM hardening, application security (AppSec), and secure software systems.",
+    title: `${PERSONAL_INFO.name} — ${PERSONAL_INFO.role}`,
+    description,
     url: `https://${PERSONAL_INFO.domain}`,
     siteName: PERSONAL_INFO.domain,
     type: "website",
-    images: ["/images/maruf-portrait.jpg"],
+    images: ["/blackhole-poster.jpg"],
   },
   twitter: {
     card: "summary_large_image",
-    title: `${PERSONAL_INFO.name} — Cybersecurity & AI Security`,
-    description:
-      "Portfolio of Maruf Hasan — Cybersecurity & AI Security. Focused on LLM hardening, application security (AppSec), and secure software systems.",
+    title: `${PERSONAL_INFO.name} — ${PERSONAL_INFO.role}`,
+    description,
   },
   icons: {
     icon: "/favicon.ico",
@@ -50,7 +51,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="antialiased bg-[#F7F7F7] text-[#171717] selection:bg-[#171717] selection:text-white">
+      <body className="bg-black text-white antialiased selection:bg-amber-300 selection:text-zinc-950">
         {children}
       </body>
     </html>
