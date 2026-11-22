@@ -2,6 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { useActiveSection } from "@/components/ActiveSectionContext";
+import {
+  useLowPerformanceMode,
+  useReducedMotion,
+} from "@/components/usePerformanceMode";
 
 type Stop = { x: number; y: number; scale: number };
 
@@ -15,7 +19,9 @@ const DESKTOP_STOPS: Stop[] = [
 ];
 
 const MOBILE_STOPS: Stop[] = [
-  { x: 0, y: 25, scale: 1.28 },
+  // Hero: sits in the lower half but lifted ~5vh from the very bottom so the
+  // outer ring clears the screen edge while the text stack gains headroom.
+  { x: 0, y: 23, scale: 1.22 },
   { x: 0, y: 2, scale: 1.45 },
   { x: 0, y: 2, scale: 1.25 },
   { x: 0, y: 36, scale: 4.6 },
@@ -45,6 +51,8 @@ const bell = (value: number, center: number) =>
 
 export default function BlackHoleStage() {
   const { stageUpdateRef } = useActiveSection();
+  const reducedMotion = useReducedMotion();
+  const lowPerformance = useLowPerformanceMode();
   const transformRef = useRef<HTMLDivElement | null>(null);
   const edgeRef = useRef<HTMLVideoElement | null>(null);
   const layer2ARef = useRef<HTMLVideoElement | null>(null);
@@ -57,7 +65,10 @@ export default function BlackHoleStage() {
   useEffect(() => {
     const mobileQuery = window.matchMedia("(max-width: 767.98px)");
     let isMobile = mobileQuery.matches;
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Reduced motion and a slow first two seconds both collapse the stage to
+    // a single-decoder, no-crossfade presentation. Capable desktops are
+    // unaffected: simpleMode stays false there.
+    const simpleMode = () => isMobile || reducedMotion || lowPerformance;
     if (reducedMotion) {
       edgeRef.current?.pause();
       layer2ARef.current?.pause();
@@ -65,10 +76,12 @@ export default function BlackHoleStage() {
       vortexRef.current?.pause();
     }
 
-    // The second focus buffer is display:none on mobile. Never fetch or
-    // decode it there; desktop keeps it preloaded for the seamless handoff.
+    // Never fetch the second focus buffer when only one decoder is allowed.
     const bufferB = layer2BRef.current;
-    if (bufferB) bufferB.preload = isMobile ? "none" : "auto";
+    const syncBufferPreload = () => {
+      if (bufferB) bufferB.preload = simpleMode() ? "none" : "auto";
+    };
+    syncBufferPreload();
 
     let targetProgress = 0;
     let smoothProgress = 0;
@@ -124,8 +137,8 @@ export default function BlackHoleStage() {
     };
     const onBreakpointChange = () => {
       isMobile = mobileQuery.matches;
-      if (bufferB) bufferB.preload = isMobile ? "none" : "auto";
-      if (isMobile) {
+      syncBufferPreload();
+      if (simpleMode()) {
         resetFocusLoop();
         bufferB?.pause();
       }
@@ -171,11 +184,12 @@ export default function BlackHoleStage() {
       const b = bufferB;
       const vortex = vortexRef.current;
 
-      if (isMobile) {
-        // Mobile: exactly one decoder runs. The outgoing clip keeps its last
-        // frame while its opacity fades out via the same bell curves, so the
-        // visual crossfade stays smooth with only the incoming clip playing.
-        // A uses its native loop; B is hidden and never starts.
+      if (simpleMode()) {
+        // Exactly one decoder runs. The outgoing clip keeps its last frame
+        // while its opacity fades out via the same bell curves, so the visual
+        // crossfade stays smooth with only the incoming clip playing. A uses
+        // its native loop. With reduced motion, setPlayback is a no-op, so
+        // the stage stays on a single static frame and never autoplays.
         setOpacity(edge, edgeWeight);
         setOpacity(a, focusWeight);
         setOpacity(b, 0);
@@ -307,7 +321,7 @@ export default function BlackHoleStage() {
       window.removeEventListener("pointerdown", onUserGesture);
       window.removeEventListener("touchstart", onUserGesture);
     };
-  }, [stageUpdateRef]);
+  }, [stageUpdateRef, reducedMotion, lowPerformance]);
 
   return (
     <div

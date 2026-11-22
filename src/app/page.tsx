@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -23,6 +23,10 @@ import {
   useActiveSection,
   type SectionId,
 } from "@/components/ActiveSectionContext";
+import {
+  useLowPerformanceMode,
+  useReducedMotion,
+} from "@/components/usePerformanceMode";
 import {
   EDUCATION,
   FOCUS_PILLARS,
@@ -114,12 +118,15 @@ const ctaPill =
 const legible = "drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]";
 const SECTIONS: SectionId[] = ["home", "focus", "projects", "contact"];
 
-// Shared label/value row so the base details and the expanded identity rows
-// read as a single native table.
+const socialPill =
+  "inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/85 outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-300";
+
+// Shared label/value row. Dividers live on the card itself via divide-y so
+// there is exactly one consistent rule between rows in either state.
 const contactRow = (compact: boolean) =>
-  `grid gap-1 border-t border-white/10 sm:grid-cols-[150px_1fr] sm:gap-6 ${compact
-    ? "py-2.5 max-md:py-1 md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-0"
-    : "py-2.5 md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-1"
+  `grid gap-1 sm:grid-cols-[150px_1fr] sm:gap-6 ${compact
+    ? "py-2.5 md:py-3.5 [@media(max-width:767px)_and_(max-height:700px)]:py-1.5"
+    : "py-2.5 md:py-3.5 [@media(max-width:767px)_and_(max-height:700px)]:py-2"
   }`;
 
 const LINKEDIN_URL = "https://www.linkedin.com/in/maruf-hasan-a530b1424";
@@ -145,6 +152,8 @@ function FacebookIcon({ className }: { className?: string }) {
 
 export default function Home() {
   const { setActiveSection, scrollToSection, stageUpdateRef } = useActiveSection();
+  const reducedMotion = useReducedMotion();
+  const lowPerformance = useLowPerformanceMode();
   const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState<CaseStudy | null>(null);
   const [isPhotoExpanded, setIsPhotoExpanded] = useState(false);
@@ -161,6 +170,26 @@ export default function Home() {
   const initialHashRef = useRef<string>(
     typeof window === "undefined" ? "" : window.location.hash
   );
+
+  // Reduced motion and a slow first two seconds drop every surface that sits
+  // over the video to a clean translucent panel — no real-time backdrop blur.
+  // Capable desktops keep the exact glass treatment they had before.
+  const simpleSurfaces = reducedMotion || lowPerformance;
+  const cardSurface = simpleSurfaces
+    ? "border-white/10 bg-neutral-950/85"
+    : "border-white/10 bg-neutral-950/80 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md";
+  const pillSurface = simpleSurfaces
+    ? "border-white/10 bg-neutral-950/85"
+    : "border-white/10 bg-neutral-950/70 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md";
+  const panelSurface = simpleSurfaces
+    ? "border-white/15 bg-neutral-950/85"
+    : "border-white/15 bg-neutral-950/85 md:bg-black/55 md:backdrop-blur-xl";
+  const softPillSurface = simpleSurfaces
+    ? "border-white/15 bg-neutral-950/85"
+    : "border-white/15 bg-neutral-950/80 md:bg-white/[0.05] md:backdrop-blur-md";
+  const ctaSurface = simpleSurfaces
+    ? "border-white/20 bg-neutral-950/85"
+    : "border-white/20 bg-neutral-950/85 md:bg-black/75 md:backdrop-blur-md";
 
   useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
 
@@ -179,118 +208,49 @@ export default function Home() {
     }
   };
 
-  const syncCarousel = (
-    track: HTMLDivElement | null,
-    setActive: (index: number) => void
-  ) => {
-    if (!track) return;
-    const cards = Array.from(track.children) as HTMLElement[];
-    if (!cards.length) return;
-    const center = track.scrollLeft + track.clientWidth / 2;
-    let best = 0;
-    let bestDistance = Infinity;
-    cards.forEach((card, index) => {
-      const cardCenter =
-        card.offsetLeft - track.offsetLeft + card.clientWidth / 2;
-      const distance = Math.abs(cardCenter - center);
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        best = index;
-      }
-    });
-    setActive(best);
-  };
-
   const goToCarouselCard = (track: HTMLDivElement | null, index: number) => {
     const card = track?.children[index] as HTMLElement | undefined;
-    if (!track || !card) return;
-    track.scrollTo({
-      left: card.offsetLeft - track.offsetLeft,
+    if (!card) return;
+    card.scrollIntoView({
       behavior: "smooth",
+      block: "nearest",
+      inline: "center",
     });
   };
 
-  type CarouselDragState = {
-    startX: number;
-    startY: number;
-    startScrollLeft: number;
-    axis: "undecided" | "horizontal" | "vertical";
+  // The browser reports which card is centred. No scroll math or setState on
+  // every touchmove frame, so dots stay in sync without adding input latency.
+  const useActiveCarouselCard = (
+    trackRef: RefObject<HTMLDivElement | null>,
+    count: number,
+    setActive: (index: number) => void
+  ) => {
+    useEffect(() => {
+      const track = trackRef.current;
+      if (!track) return;
+      const cards = Array.from(track.children) as HTMLElement[];
+      if (!cards.length) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const index = cards.indexOf(entry.target as HTMLElement);
+            if (index >= 0) setActive(index);
+          }
+        },
+        { root: track, threshold: 0.6 }
+      );
+      cards.forEach((card) => observer.observe(card));
+      return () => observer.disconnect();
+    }, [trackRef, count, setActive]);
   };
 
-  // Lock the gesture axis after the first few pixels. A mostly-vertical swipe
-  // is handed straight back to the page's native scroll/snap; only a clearly
-  // horizontal swipe drives the carousel. `preventDefault()` is never called,
-  // so vertical scrolling is never cancelled.
-  const DIRECTION_LOCK_PX = 6;
-
-  const useCarouselTouchHandlers = () => {
-    const dragRef = useRef<CarouselDragState | null>(null);
-
-    const onTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
-      if (event.touches.length !== 1) {
-        dragRef.current = null;
-        return;
-      }
-      const touch = event.touches[0];
-      dragRef.current = {
-        startX: touch.clientX,
-        startY: touch.clientY,
-        startScrollLeft: event.currentTarget.scrollLeft,
-        axis: "undecided",
-      };
-    };
-
-    const onTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (!drag || event.touches.length !== 1) return;
-
-      const touch = event.touches[0];
-      const deltaX = touch.clientX - drag.startX;
-      const deltaY = touch.clientY - drag.startY;
-      const absX = Math.abs(deltaX);
-      const absY = Math.abs(deltaY);
-
-      if (drag.axis === "undecided") {
-        if (absX < DIRECTION_LOCK_PX && absY < DIRECTION_LOCK_PX) return;
-
-        if (absY > absX) {
-          // Vertical intent: abort immediately and leave the event untouched
-          // so the full-page scroll/snap handler owns the gesture.
-          drag.axis = "vertical";
-          return;
-        }
-        if (absX > absY) {
-          drag.axis = "horizontal";
-          // Pause snap points while dragging; clearing this on touchend lets
-          // the browser re-snap to the nearest card.
-          event.currentTarget.style.scrollSnapType = "none";
-        } else {
-          return; // still ambiguous, keep waiting
-        }
-      }
-
-      if (drag.axis !== "horizontal") return;
-      event.currentTarget.scrollLeft = drag.startScrollLeft - deltaX;
-    };
-
-    const onTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      dragRef.current = null;
-      if (drag?.axis === "horizontal") {
-        event.currentTarget.style.scrollSnapType = "";
-      }
-    };
-
-    return {
-      onTouchStart,
-      onTouchMove,
-      onTouchEnd,
-      onTouchCancel: onTouchEnd,
-    };
-  };
-
-  const focusTouchHandlers = useCarouselTouchHandlers();
-  const projectsTouchHandlers = useCarouselTouchHandlers();
+  useActiveCarouselCard(focusTrackRef, FOCUS_PILLARS.length, setActiveFocusCard);
+  useActiveCarouselCard(
+    projectsTrackRef,
+    CASE_STUDIES.length,
+    setActiveProjectCard
+  );
 
   const carouselIndicator = (
     count: number,
@@ -529,7 +489,7 @@ export default function Home() {
         {/* 01 — Overview */}
         <section
           id="home"
-          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section items-start justify-start overflow-hidden md:overflow-visible px-6 pt-28 sm:pt-32 pb-6 md:items-center md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="w-full max-w-2xl">
             <h1 className="mt-6 text-balance text-5xl font-medium leading-none tracking-[-0.045em] text-white sm:text-7xl lg:text-8xl max-md:mt-3 max-md:text-4xl">
@@ -592,14 +552,12 @@ export default function Home() {
 
             <div
               ref={focusTrackRef}
-              {...focusTouchHandlers}
-              onScroll={() => syncCarousel(focusTrackRef.current, setActiveFocusCard)}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-y max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
+              className="no-scrollbar flex snap-x snap-mandatory scroll-smooth touch-pan-x touch-pan-y gap-3.5 overflow-x-auto -mx-6 px-[9vw] pb-2 max-md:select-none sm:-mx-10 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0 [@media(max-width:767px)_and_(max-height:700px)]:pb-0"
             >
               {FOCUS_PILLARS.map((pillar) => (
                 <article
                   key={pillar.number}
-                  className="min-w-[84vw] snap-center rounded-2xl border border-white/10 bg-neutral-950/80 p-6 sm:p-8 md:min-w-0 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center [@media(max-width:767px)_and_(max-height:700px)]:p-4"
+                  className={`w-[82vw] max-w-[340px] shrink-0 snap-center snap-always rounded-2xl ${cardSurface} p-6 sm:p-8 md:w-auto md:max-w-none md:min-w-0 [@media(max-width:767px)_and_(max-height:700px)]:p-4`}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className={`${legible} font-mono text-xs tabular-nums text-amber-200/70`}>
@@ -631,7 +589,7 @@ export default function Home() {
                 {TECH_STACK.map((tech) => (
                   <span
                     key={tech}
-                    className={`${legible} rounded-full border border-white/10 bg-neutral-950/70 px-4 py-2 text-xs text-white/80 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md max-md:px-3 max-md:py-1.5`}
+                    className={`${legible} rounded-full ${pillSurface} px-4 py-2 text-xs text-white/80 max-md:px-3 max-md:py-1.5`}
                   >
                     {tech}
                   </span>
@@ -660,15 +618,13 @@ export default function Home() {
 
             <div
               ref={projectsTrackRef}
-              {...projectsTouchHandlers}
-              onScroll={() => syncCarousel(projectsTrackRef.current, setActiveProjectCard)}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-y max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
+              className="no-scrollbar flex snap-x snap-mandatory scroll-smooth touch-pan-x touch-pan-y gap-3.5 overflow-x-auto -mx-6 px-[9vw] pb-2 max-md:select-none sm:-mx-10 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0 [@media(max-width:767px)_and_(max-height:700px)]:pb-0"
             >
               {CASE_STUDIES.map((project) => (
                 <article
                   key={project.id}
                   onClick={() => setSelectedProject(project)}
-                  className="flex h-full min-w-[84vw] cursor-pointer snap-center flex-col rounded-2xl border border-white/10 bg-neutral-950/80 p-6 sm:p-8 md:min-w-0 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center"
+                  className={`flex h-full w-[82vw] max-w-[340px] shrink-0 cursor-pointer snap-center snap-always flex-col rounded-2xl ${cardSurface} p-6 sm:p-8 md:w-auto md:max-w-none md:min-w-0`}
                 >
                   <p className={`${legible} font-mono text-xs leading-5 text-amber-200/70`}>
                     {project.category}
@@ -737,9 +693,9 @@ export default function Home() {
               and secure software systems.
             </p>
 
-            <div className={`rounded-2xl border border-white/15 bg-neutral-950/85 md:bg-black/55 md:backdrop-blur-xl ${isMoreInfoOpen
-              ? "mt-1 md:mt-4 max-md:space-y-1 max-md:p-1.5 md:p-6 [@media(max-width:767px)_and_(max-height:700px)]:p-0.5"
-              : "mt-5 md:mt-10 max-md:space-y-3 max-md:p-3 md:p-8 [@media(max-width:767px)_and_(max-height:700px)]:p-2.5"
+            <div className={`rounded-2xl divide-y divide-white/10 ${panelSurface} ${isMoreInfoOpen
+              ? "mt-1 md:mt-4 max-md:p-4 md:p-6 [@media(max-width:767px)_and_(max-height:700px)]:p-3"
+              : "mt-5 md:mt-10 max-md:p-4 md:p-8 [@media(max-width:767px)_and_(max-height:700px)]:p-3"
               }`}>
               <div className="flex items-center justify-between gap-3 pb-1 md:pb-2">
                 {isMoreInfoOpen ? (
@@ -777,7 +733,7 @@ export default function Home() {
                   type="button"
                   onClick={() => setIsMoreInfoOpen((open) => !open)}
                   aria-expanded={isMoreInfoOpen}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-neutral-950/80 px-3 py-1 text-[11px] font-medium text-white/75 outline-none transition-colors hover:bg-white/[0.1] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300 md:bg-white/[0.05] md:backdrop-blur-md"
+                  className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full ${softPillSurface} px-3 py-1.5 text-xs font-medium text-white/75 outline-none transition-colors hover:bg-white/[0.1] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300`}
                 >
                   {isMoreInfoOpen ? (
                     <EyeOff className="h-3.5 w-3.5" />
@@ -795,67 +751,40 @@ export default function Home() {
                 </span>
                 <div>
                   <p className="text-base text-white">{EDUCATION.degree}</p>
-                  <p className={`mt-1 text-sm text-white/65 ${isMoreInfoOpen
-                    ? "[@media(max-width:767px)_and_(max-height:700px)]:hidden"
-                    : ""
-                    }`}>{EDUCATION.institution}</p>
+                  <p className="mt-1 text-sm text-white/65">{EDUCATION.institution}</p>
                 </div>
               </div>
-              <div className={contactRow(isMoreInfoOpen)}>
-                <span className="flex items-center gap-2 text-xs font-medium text-white/50">
-                  <GithubIcon className="h-4 w-4" />
-                  GitHub
-                </span>
+              <div className="flex flex-wrap items-center gap-2 py-2.5 md:py-3.5">
                 <a
                   href={PERSONAL_INFO.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                  className={socialPill}
                 >
-                  {PERSONAL_INFO.githubHandle}
-                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  <GithubIcon className="h-3.5 w-3.5" />
+                  GitHub
+                  <ArrowUpRight className="h-3 w-3 text-white/50" />
                 </a>
-              </div>
-
-              <div
-                className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${isMoreInfoOpen
-                  ? "grid-rows-[1fr] opacity-100"
-                  : "grid-rows-[0fr] opacity-0"
-                  }`}
-                aria-hidden={!isMoreInfoOpen}
-              >
-                <div className="min-h-0 overflow-hidden">
-                  <div className={contactRow(isMoreInfoOpen)}>
-                    <span className="flex items-center gap-2 text-xs font-medium text-white/50">
-                      <LinkedInIcon className="h-4 w-4" />
-                      LinkedIn
-                    </span>
-                    <a
-                      href={LINKEDIN_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
-                    >
-                      /in/bymaruf
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
-                  <div className={contactRow(isMoreInfoOpen)}>
-                    <span className="flex items-center gap-2 text-xs font-medium text-white/50">
-                      <FacebookIcon className="h-4 w-4" />
-                      Facebook
-                    </span>
-                    <a
-                      href={FACEBOOK_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
-                    >
-                      Maruf Hasan
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
-                </div>
+                <a
+                  href={LINKEDIN_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={socialPill}
+                >
+                  <LinkedInIcon className="h-3.5 w-3.5" />
+                  LinkedIn
+                  <ArrowUpRight className="h-3 w-3 text-white/50" />
+                </a>
+                <a
+                  href={FACEBOOK_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={socialPill}
+                >
+                  <FacebookIcon className="h-3.5 w-3.5" />
+                  Facebook
+                  <ArrowUpRight className="h-3 w-3 text-white/50" />
+                </a>
               </div>
 
               <div className={contactRow(isMoreInfoOpen)}>
@@ -865,7 +794,7 @@ export default function Home() {
                 </span>
                 <a
                   href={`mailto:${PERSONAL_INFO.email}`}
-                  className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                  className="inline-flex w-fit items-center gap-2 text-base text-white no-underline outline-none transition-colors hover:text-amber-100 focus-visible:ring-2 focus-visible:ring-amber-300"
                 >
                   {PERSONAL_INFO.email}
                 </a>
@@ -887,7 +816,7 @@ export default function Home() {
                     <div className="flex items-center gap-2">
                       <a
                         href={PHONE_HREF}
-                        className="text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                        className="text-base text-white no-underline outline-none transition-colors hover:text-amber-100 focus-visible:ring-2 focus-visible:ring-amber-300"
                       >
                         {PHONE_DISPLAY}
                       </a>
@@ -913,9 +842,9 @@ export default function Home() {
             <button
               type="button"
               onClick={() => scrollToSection("home")}
-              className={`group inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-neutral-950/85 px-5 py-2.5 text-sm font-medium text-white outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300 md:bg-black/75 md:backdrop-blur-md ${isMoreInfoOpen
-                ? "mt-3 max-md:mt-0 [@media(max-width:767px)_and_(max-height:700px)]:mt-0"
-                : "mt-10 max-md:mt-4 [@media(max-width:767px)_and_(max-height:700px)]:mt-3"
+              className={`group inline-flex w-fit items-center gap-2 rounded-full ${ctaSurface} px-5 py-2.5 text-sm font-medium text-white outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300 ${isMoreInfoOpen
+                ? "mt-4"
+                : "mt-10 max-md:mt-4 [@media(max-width:767px)_and_(max-height:700px)]:mt-4"
                 }`}
             >
               <ArrowUp className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
@@ -938,52 +867,33 @@ export default function Home() {
           aria-modal="true"
           aria-labelledby="case-study-title"
           onClick={() => setSelectedProject(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/55 p-4 backdrop-blur-md"
         >
-          <video
-            src="/yellow-black-hole.mp4"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-75"
-          />
-          <div className="pointer-events-none absolute inset-0 bg-black/25" />
           <div
             onClick={(event) => event.stopPropagation()}
-            className="relative flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-amber-300/25 bg-black/35 shadow-[0_24px_80px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-xl"
+            className="relative flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/12 bg-[#0a0a0b]/72 shadow-[0_0_50px_-15px_rgba(234,88,12,0.18)] md:backdrop-blur-md"
           >
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-black/30" />
             <header className="relative z-10 flex shrink-0 items-start justify-between gap-4 border-b border-white/10 p-5 md:p-6">
               <div className="min-w-0">
-                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-amber-200/70">
-                  Case study
-                </p>
+                <p className="text-xs text-neutral-500">Case study</p>
                 <h2
                   id="case-study-title"
-                  className="mt-1 text-2xl font-medium tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+                  className="mt-2 text-2xl font-medium tracking-tight text-white"
                 >
                   {selectedProject.title}
                 </h2>
-                <p className="mt-1 text-sm text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                <p className="mt-1.5 text-sm text-neutral-400">
                   {selectedProject.tagline}
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedProject.highlights.map((highlight) => (
-                    <span
-                      key={highlight}
-                      className="rounded-full border border-amber-200/20 bg-amber-200/[0.07] px-2.5 py-1 text-[11px] text-amber-100/85"
-                    >
-                      {highlight}
-                    </span>
-                  ))}
-                </div>
+                <p className="mt-3 font-mono text-[11px] leading-5 text-neutral-500">
+                  {selectedProject.highlights.join(" · ")}
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedProject(null)}
                 aria-label="Close case study"
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 text-neutral-400 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -995,67 +905,48 @@ export default function Home() {
               className="relative z-10 flex-1 space-y-6 overflow-y-auto p-5 md:p-6 outline-none"
             >
               <section>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                  Overview
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                  {selectedProject.summary}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                  {selectedProject.problem}
-                </p>
-              </section>
-
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                  System Architecture
-                </h3>
-                <ul className="mt-2 space-y-2">
-                  {selectedProject.architecture.map((item) => (
-                    <li key={item} className="flex gap-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-300/70" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                  Security &amp; Hardening
-                </h3>
-                <ul className="mt-2 space-y-2">
-                  {selectedProject.security.map((item) => (
-                    <li key={item} className="flex gap-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-300/70" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-                  Tech Stack
-                </h3>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {selectedProject.stack.map((tech) => (
-                    <span
-                      key={tech}
-                      className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1 text-xs text-white/75"
-                    >
-                      {tech}
-                    </span>
-                  ))}
+                <h3 className="text-xs font-medium text-neutral-400">Overview</h3>
+                <div className="mt-3 space-y-3 text-sm leading-6 text-neutral-300">
+                  <p>{selectedProject.summary}</p>
+                  <p>{selectedProject.problem}</p>
                 </div>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-medium text-neutral-400">
+                  System architecture
+                </h3>
+                <ul className="mt-3 space-y-3 text-sm leading-6 text-neutral-300">
+                  {selectedProject.architecture.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-medium text-neutral-400">
+                  Security &amp; hardening
+                </h3>
+                <ul className="mt-3 space-y-3 text-sm leading-6 text-neutral-300">
+                  {selectedProject.security.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-medium text-neutral-400">Tech stack</h3>
+                <p className="mt-3 font-mono text-xs leading-6 text-neutral-400">
+                  {selectedProject.stack.join(" · ")}
+                </p>
               </section>
             </div>
 
-            <footer className="relative z-10 flex shrink-0 items-center justify-end gap-3 border-t border-white/10 p-4 md:p-5">
+            <footer className="relative z-10 flex shrink-0 items-center justify-end gap-2 border-t border-white/10 p-4 md:p-5">
               <button
                 type="button"
                 onClick={() => setSelectedProject(null)}
-                className="inline-flex items-center rounded-full border border-white/15 px-4 py-2 text-sm text-white/75 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                className="inline-flex items-center rounded-lg px-3 py-2 text-sm text-neutral-400 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 Close
               </button>
@@ -1063,7 +954,7 @@ export default function Home() {
                 href={selectedProject.githubUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-amber-200/25 bg-amber-200/10 px-4 py-2 text-sm font-medium text-amber-100 outline-none transition-colors hover:bg-amber-200/20 focus-visible:ring-2 focus-visible:ring-amber-300"
+                className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-neutral-950 outline-none transition-colors hover:bg-neutral-200 focus-visible:ring-2 focus-visible:ring-white/40"
               >
                 View on GitHub
                 <ArrowUpRight className="h-3.5 w-3.5" />

@@ -35,6 +35,15 @@
   scroll-snap-stop: always;
 }
 
+/* Keeps the native carousel track scrollable but visually clean. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Keeps white type readable where the accretion disk passes behind it. */
 .text-on-video {
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.95);
