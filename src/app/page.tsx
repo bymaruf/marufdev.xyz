@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type TouchEvent as ReactTouchEvent } from "react";
 import Image from "next/image";
 import {
   ArrowRight,
@@ -209,6 +209,88 @@ export default function Home() {
       behavior: "smooth",
     });
   };
+
+  type CarouselDragState = {
+    startX: number;
+    startY: number;
+    startScrollLeft: number;
+    axis: "undecided" | "horizontal" | "vertical";
+  };
+
+  // Lock the gesture axis after the first few pixels. A mostly-vertical swipe
+  // is handed straight back to the page's native scroll/snap; only a clearly
+  // horizontal swipe drives the carousel. `preventDefault()` is never called,
+  // so vertical scrolling is never cancelled.
+  const DIRECTION_LOCK_PX = 6;
+
+  const useCarouselTouchHandlers = () => {
+    const dragRef = useRef<CarouselDragState | null>(null);
+
+    const onTouchStart = (event: ReactTouchEvent<HTMLDivElement>) => {
+      if (event.touches.length !== 1) {
+        dragRef.current = null;
+        return;
+      }
+      const touch = event.touches[0];
+      dragRef.current = {
+        startX: touch.clientX,
+        startY: touch.clientY,
+        startScrollLeft: event.currentTarget.scrollLeft,
+        axis: "undecided",
+      };
+    };
+
+    const onTouchMove = (event: ReactTouchEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - drag.startX;
+      const deltaY = touch.clientY - drag.startY;
+      const absX = Math.abs(deltaX);
+      const absY = Math.abs(deltaY);
+
+      if (drag.axis === "undecided") {
+        if (absX < DIRECTION_LOCK_PX && absY < DIRECTION_LOCK_PX) return;
+
+        if (absY > absX) {
+          // Vertical intent: abort immediately and leave the event untouched
+          // so the full-page scroll/snap handler owns the gesture.
+          drag.axis = "vertical";
+          return;
+        }
+        if (absX > absY) {
+          drag.axis = "horizontal";
+          // Pause snap points while dragging; clearing this on touchend lets
+          // the browser re-snap to the nearest card.
+          event.currentTarget.style.scrollSnapType = "none";
+        } else {
+          return; // still ambiguous, keep waiting
+        }
+      }
+
+      if (drag.axis !== "horizontal") return;
+      event.currentTarget.scrollLeft = drag.startScrollLeft - deltaX;
+    };
+
+    const onTouchEnd = (event: ReactTouchEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      dragRef.current = null;
+      if (drag?.axis === "horizontal") {
+        event.currentTarget.style.scrollSnapType = "";
+      }
+    };
+
+    return {
+      onTouchStart,
+      onTouchMove,
+      onTouchEnd,
+      onTouchCancel: onTouchEnd,
+    };
+  };
+
+  const focusTouchHandlers = useCarouselTouchHandlers();
+  const projectsTouchHandlers = useCarouselTouchHandlers();
 
   const carouselIndicator = (
     count: number,
@@ -489,8 +571,9 @@ export default function Home() {
 
             <div
               ref={focusTrackRef}
+              {...focusTouchHandlers}
               onScroll={() => syncCarousel(focusTrackRef.current, setActiveFocusCard)}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:touch-pan-x max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-y max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
             >
               {FOCUS_PILLARS.map((pillar) => (
                 <article
@@ -556,8 +639,9 @@ export default function Home() {
 
             <div
               ref={projectsTrackRef}
+              {...projectsTouchHandlers}
               onScroll={() => syncCarousel(projectsTrackRef.current, setActiveProjectCard)}
-              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:touch-pan-x max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-y max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
             >
               {CASE_STUDIES.map((project) => (
                 <article

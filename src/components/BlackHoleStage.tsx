@@ -23,6 +23,12 @@ const MOBILE_STOPS: Stop[] = [
 
 const CROSSFADE_SEC = 0.85;
 
+// Optimized, fast-seeking derivatives of the original 3840x3840 source.
+// <source media> lets the browser pick the right one natively on first load.
+const FOCUS_DESKTOP_SRC = "/blackhole-focus-360-desktop.mp4";
+const FOCUS_MOBILE_SRC = "/blackhole-focus-360-mobile.mp4";
+const FOCUS_POSTER = "/blackhole-focus-poster.webp";
+
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 const smoothstep = (start: number, end: number, value: number) => {
@@ -63,6 +69,37 @@ export default function BlackHoleStage() {
     let activeLayer: "A" | "B" = "A";
     let focusBlendA = 1;
     let focusBlendB = 0;
+    let lastActiveTime = 0;
+
+    // Low Power Mode on iOS can silently refuse muted autoplay. Remember a
+    // rejected play() and retry on the first real user gesture so the Focus
+    // video never stays frozen on its poster.
+    let resumeOnGesture = false;
+    const tryPlay = (video: HTMLVideoElement | null) => {
+      if (!video || reducedMotion) return;
+      const attempt = video.play();
+      if (attempt && typeof attempt.then === "function") {
+        attempt.then(
+          () => {
+            resumeOnGesture = false;
+          },
+          () => {
+            resumeOnGesture = true;
+          }
+        );
+      }
+    };
+    const onUserGesture = () => {
+      if (!resumeOnGesture) return;
+      const active =
+        activeLayer === "A" ? layer2ARef.current : layer2BRef.current;
+      const standby =
+        activeLayer === "A" ? layer2BRef.current : layer2ARef.current;
+      tryPlay(active);
+      if (standby && standby.currentTime > 0) tryPlay(standby);
+    };
+    window.addEventListener("pointerdown", onUserGesture, { passive: true });
+    window.addEventListener("touchstart", onUserGesture, { passive: true });
 
     const apply = (value: number) => {
       const p = Math.min(3, Math.max(0, value));
@@ -108,12 +145,14 @@ export default function BlackHoleStage() {
         activeLayer = "A";
         focusBlendA = 1;
         focusBlendB = 0;
+        lastActiveTime = 0;
         hasStartedFocusRef.current = false;
       } else {
         // Entry cue: A starts from 0.0s exactly as before, once.
         if (!hasStartedFocusRef.current && !reducedMotion) {
           hasStartedFocusRef.current = true;
-          if (a) void a.play().catch(() => {});
+          lastActiveTime = 0;
+          tryPlay(a);
         }
 
         // Loop handoff — evaluated on every rAF frame (apply is called by tick).
@@ -121,19 +160,25 @@ export default function BlackHoleStage() {
         const standbyEl = activeLayer === "A" ? b : a;
         if (activeEl && standbyEl) {
           const dur = activeEl.duration;
-          if (
+          const currentTime = activeEl.currentTime;
+          // Native `loop` wraps currentTime to 0 instead of firing `ended`,
+          // so finish the crossfade on the wrap as well as on the tail.
+          const wrapped = currentTime < lastActiveTime - 0.5;
+          lastActiveTime = currentTime;
+          const inTail =
             Number.isFinite(dur) &&
             dur > 2 &&
-            activeEl.currentTime >= dur - CROSSFADE_SEC
-          ) {
+            currentTime >= dur - CROSSFADE_SEC;
+
+          if (inTail || wrapped) {
             if (standbyEl.paused) {
               standbyEl.currentTime = 0;
-              void standbyEl.play().catch(() => {});
+              tryPlay(standbyEl);
             }
 
-            const blend = clamp01(
-              (activeEl.currentTime - (dur - CROSSFADE_SEC)) / CROSSFADE_SEC
-            );
+            const blend = wrapped
+              ? 1
+              : clamp01((currentTime - (dur - CROSSFADE_SEC)) / CROSSFADE_SEC);
             const ease = smoothstep(0, 1, blend);
             if (activeLayer === "A") {
               focusBlendA = 1 - ease;
@@ -143,9 +188,10 @@ export default function BlackHoleStage() {
               focusBlendA = ease;
             }
 
-            if (blend >= 1 || activeEl.ended) {
+            if (blend >= 1 || activeEl.ended || wrapped) {
               activeEl.pause();
               activeEl.currentTime = 0;
+              lastActiveTime = 0;
               if (activeLayer === "A") {
                 focusBlendA = 0;
                 focusBlendB = 1;
@@ -193,6 +239,8 @@ export default function BlackHoleStage() {
     return () => {
       stageUpdateRef.current = null;
       window.cancelAnimationFrame(raf);
+      window.removeEventListener("pointerdown", onUserGesture);
+      window.removeEventListener("touchstart", onUserGesture);
     };
   }, [stageUpdateRef]);
 
@@ -219,22 +267,46 @@ export default function BlackHoleStage() {
         />
         <video
           ref={layer2ARef}
-          src="/blackhole-focus-360-v2.mp4"
+          poster={FOCUS_POSTER}
           className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out"
           style={{ opacity: 0 }}
+          loop
           muted
           playsInline
           preload="auto"
-        />
+        >
+          <source
+            media="(max-width: 767.98px)"
+            src={FOCUS_MOBILE_SRC}
+            type="video/mp4"
+          />
+          <source
+            media="(min-width: 768px)"
+            src={FOCUS_DESKTOP_SRC}
+            type="video/mp4"
+          />
+        </video>
         <video
           ref={layer2BRef}
-          src="/blackhole-focus-360-v2.mp4"
+          poster={FOCUS_POSTER}
           className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out"
           style={{ opacity: 0 }}
+          loop
           muted
           playsInline
           preload="auto"
-        />
+        >
+          <source
+            media="(max-width: 767.98px)"
+            src={FOCUS_MOBILE_SRC}
+            type="video/mp4"
+          />
+          <source
+            media="(min-width: 768px)"
+            src={FOCUS_DESKTOP_SRC}
+            type="video/mp4"
+          />
+        </video>
         <video
           ref={vortexRef}
           src="/blackhole-vortex-loop.mp4"
