@@ -484,12 +484,12 @@ export default function Home() {
 
       <main
         ref={containerRef}
-        className="page-snap-container relative z-10 h-[100dvh] overflow-x-clip overflow-y-auto"
+        className="page-snap-container snap-y snap-mandatory relative z-10 h-[100dvh] overflow-x-clip overflow-y-auto"
       >
         {/* 01 — Overview */}
         <section
           id="home"
-          className="flex h-[100dvh] md:min-h-screen page-snap-section items-start justify-start overflow-hidden md:overflow-visible px-6 pt-28 sm:pt-32 pb-6 md:items-center md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section snap-start snap-always items-start justify-start overflow-hidden md:overflow-visible px-6 pt-28 sm:pt-32 pb-6 md:items-center md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="w-full max-w-2xl">
             <h1 className="mt-6 text-balance text-5xl font-medium leading-none tracking-[-0.045em] text-white sm:text-7xl lg:text-8xl max-md:mt-3 max-md:text-4xl">
@@ -536,7 +536,7 @@ export default function Home() {
         {/* 02 — Core focus */}
         <section
           id="focus"
-          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="mx-auto w-full max-w-6xl">
             <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3 [@media(max-width:767px)_and_(max-height:700px)]:mb-2">
@@ -602,7 +602,7 @@ export default function Home() {
         {/* 03 — Featured projects */}
         <section
           id="projects"
-          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-2"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-2"
         >
           <div className="mx-auto w-full max-w-6xl">
             <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3 [@media(max-width:767px)_and_(max-height:700px)]:mb-2">
@@ -682,7 +682,7 @@ export default function Home() {
         {/* 04 — Beyond the horizon */}
         <section
           id="contact"
-          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:pt-24 md:pb-8 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-3"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:pt-24 md:pb-8 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-3"
         >
           <div className="mx-auto w-full max-w-3xl">
             <h2 className="text-on-video mt-4 text-balance text-4xl font-medium tracking-[-0.035em] text-white sm:text-6xl max-md:mt-0 max-md:text-3xl">
@@ -871,7 +871,7 @@ export default function Home() {
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            className="relative flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/12 bg-[#0a0a0b]/72 shadow-[0_0_50px_-15px_rgba(234,88,12,0.18)] md:backdrop-blur-md"
+            className="relative flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/12 bg-[#0a0a0b]/75 shadow-[0_0_50px_-15px_rgba(234,88,12,0.18)] backdrop-blur-md"
           >
             <header className="relative z-10 flex shrink-0 items-start justify-between gap-4 border-b border-white/10 p-5 md:p-6">
               <div className="min-w-0">
