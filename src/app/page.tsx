@@ -7,6 +7,8 @@ import {
   ArrowUp,
   ArrowUpRight,
   Check,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Eye,
   EyeOff,
@@ -147,7 +149,11 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<CaseStudy | null>(null);
   const [isPhotoExpanded, setIsPhotoExpanded] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
+  const [activeFocusCard, setActiveFocusCard] = useState(0);
+  const [activeProjectCard, setActiveProjectCard] = useState(0);
   const copyTimerRef = useRef(0);
+  const focusTrackRef = useRef<HTMLDivElement | null>(null);
+  const projectsTrackRef = useRef<HTMLDivElement | null>(null);
   const modalBodyRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLElement | null>(null);
   const isKeyScrollingRef = useRef(false);
@@ -172,6 +178,76 @@ export default function Home() {
       // Clipboard can be unavailable in insecure contexts — leave the label intact.
     }
   };
+
+  const syncCarousel = (
+    track: HTMLDivElement | null,
+    setActive: (index: number) => void
+  ) => {
+    if (!track) return;
+    const cards = Array.from(track.children) as HTMLElement[];
+    if (!cards.length) return;
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let best = 0;
+    let bestDistance = Infinity;
+    cards.forEach((card, index) => {
+      const cardCenter =
+        card.offsetLeft - track.offsetLeft + card.clientWidth / 2;
+      const distance = Math.abs(cardCenter - center);
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = index;
+      }
+    });
+    setActive(best);
+  };
+
+  const goToCarouselCard = (track: HTMLDivElement | null, index: number) => {
+    const card = track?.children[index] as HTMLElement | undefined;
+    if (!track || !card) return;
+    track.scrollTo({
+      left: card.offsetLeft - track.offsetLeft,
+      behavior: "smooth",
+    });
+  };
+
+  const carouselIndicator = (
+    count: number,
+    active: number,
+    onSelect: (index: number) => void
+  ) => (
+    <div className="mt-3 flex select-none items-center justify-center gap-3 md:hidden [@media(max-width:767px)_and_(max-height:700px)]:mt-1 [@media(max-width:767px)_and_(max-height:700px)]:gap-2">
+      <button
+        type="button"
+        aria-label="Previous card"
+        onClick={() => onSelect(Math.max(0, active - 1))}
+        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-300 [@media(max-width:767px)_and_(max-height:700px)]:h-6 [@media(max-width:767px)_and_(max-height:700px)]:w-6"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+      </button>
+      <div className="flex items-center gap-2" aria-hidden>
+        {Array.from({ length: count }).map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            aria-label={`Go to card ${index + 1}`}
+            aria-current={active === index}
+            onClick={() => onSelect(index)}
+            className={`h-1.5 rounded-full transition-all outline-none focus-visible:ring-2 focus-visible:ring-amber-300 ${
+              active === index ? "w-6 bg-amber-300/85" : "w-1.5 bg-white/25"
+            }`}
+          />
+        ))}
+      </div>
+      <button
+        type="button"
+        aria-label="Next card"
+        onClick={() => onSelect(Math.min(count - 1, active + 1))}
+        className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-amber-300 [@media(max-width:767px)_and_(max-height:700px)]:h-6 [@media(max-width:767px)_and_(max-height:700px)]:w-6"
+      >
+        <ChevronRight className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
 
   useEffect(() => {
     const container = containerRef.current;
@@ -400,7 +476,7 @@ export default function Home() {
           className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="mx-auto w-full max-w-6xl">
-            <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3">
+            <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3 [@media(max-width:767px)_and_(max-height:700px)]:mb-2">
               <div>
                 <h2 className={`${legible} mt-3 text-3xl font-medium tracking-tight text-white sm:text-4xl`}>
                   Three areas of focus
@@ -411,11 +487,15 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0">
+            <div
+              ref={focusTrackRef}
+              onScroll={() => syncCarousel(focusTrackRef.current, setActiveFocusCard)}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:touch-pan-x max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
+            >
               {FOCUS_PILLARS.map((pillar) => (
                 <article
                   key={pillar.number}
-                  className="min-w-[84vw] snap-center rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0 [@media(max-width:767px)_and_(max-height:700px)]:p-4"
+                  className="min-w-[84vw] snap-center rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0 max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center [@media(max-width:767px)_and_(max-height:700px)]:p-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className={`${legible} font-mono text-xs tabular-nums text-amber-200/70`}>
@@ -433,7 +513,13 @@ export default function Home() {
               ))}
             </div>
 
-            <section className="mt-10 border-t border-white/10 pt-8 max-md:mt-5 max-md:pt-4">
+            {carouselIndicator(
+              FOCUS_PILLARS.length,
+              activeFocusCard,
+              (index) => goToCarouselCard(focusTrackRef.current, index)
+            )}
+
+            <section className="mt-10 border-t border-white/10 pt-8 max-md:mt-5 max-md:pt-4 [@media(max-width:767px)_and_(max-height:700px)]:mt-3 [@media(max-width:767px)_and_(max-height:700px)]:pt-3">
               <h3 className={`${legible} mb-4 text-xs font-medium text-white/55`}>
                 Tech stack
               </h3>
@@ -454,10 +540,10 @@ export default function Home() {
         {/* 03 — Featured projects */}
         <section
           id="projects"
-          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
+          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-2"
         >
           <div className="mx-auto w-full max-w-6xl">
-            <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3">
+            <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3 [@media(max-width:767px)_and_(max-height:700px)]:mb-2">
               <div>
                 <h2 className={`${legible} mt-3 text-3xl font-medium tracking-tight text-white sm:text-4xl`}>
                   Open-source work
@@ -468,12 +554,16 @@ export default function Home() {
               </p>
             </header>
 
-            <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0">
+            <div
+              ref={projectsTrackRef}
+              onScroll={() => syncCarousel(projectsTrackRef.current, setActiveProjectCard)}
+              className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-md:touch-pan-x max-md:select-none [@media(max-width:767px)_and_(max-height:700px)]:pb-0 md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0"
+            >
               {CASE_STUDIES.map((project) => (
                 <article
                   key={project.id}
                   onClick={() => setSelectedProject(project)}
-                  className="flex h-full min-w-[84vw] cursor-pointer snap-center flex-col rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0"
+                  className="flex h-full min-w-[84vw] cursor-pointer snap-center flex-col rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0 max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center"
                 >
                   <p className={`${legible} font-mono text-xs leading-5 text-amber-200/70`}>
                     {project.category}
@@ -519,6 +609,12 @@ export default function Home() {
                 </article>
               ))}
             </div>
+
+            {carouselIndicator(
+              CASE_STUDIES.length,
+              activeProjectCard,
+              (index) => goToCarouselCard(projectsTrackRef.current, index)
+            )}
           </div>
         </section>
 
@@ -753,7 +849,7 @@ export default function Home() {
             className="relative flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-amber-300/25 bg-black/35 shadow-[0_24px_80px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-xl"
           >
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-black/30" />
-            <header className="relative flex shrink-0 items-start justify-between gap-4 border-b border-white/10 p-5 md:p-6">
+            <header className="relative z-10 flex shrink-0 items-start justify-between gap-4 border-b border-white/10 p-5 md:p-6">
               <div className="min-w-0">
                 <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-amber-200/70">
                   Case study
@@ -791,7 +887,7 @@ export default function Home() {
             <div
               ref={modalBodyRef}
               tabIndex={-1}
-              className="relative flex-1 space-y-6 overflow-y-auto p-5 md:p-6 outline-none"
+              className="relative z-10 flex-1 space-y-6 overflow-y-auto p-5 md:p-6 outline-none"
             >
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
@@ -850,7 +946,7 @@ export default function Home() {
               </section>
             </div>
 
-            <footer className="relative flex shrink-0 items-center justify-end gap-3 border-t border-white/10 p-4 md:p-5">
+            <footer className="relative z-10 flex shrink-0 items-center justify-end gap-3 border-t border-white/10 p-4 md:p-5">
               <button
                 type="button"
                 onClick={() => setSelectedProject(null)}

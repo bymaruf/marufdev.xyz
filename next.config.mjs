@@ -1,7 +1,15 @@
 /** @type {import('next').NextConfig} */
 const isProduction = process.env.NODE_ENV === "production";
 
-const commonHeaders = [
+const productionHeaders = [
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
+  {
+    key: "X-Frame-Options",
+    value: "DENY",
+  },
   {
     key: "X-Content-Type-Options",
     value: "nosniff",
@@ -12,67 +20,54 @@ const commonHeaders = [
   },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), browsing-topics=(), payment=(), usb=()",
+    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
   },
-  {
-    key: "Cross-Origin-Opener-Policy",
-    value: "same-origin",
-  },
-  {
-    key: "Cross-Origin-Resource-Policy",
-    value: "same-origin",
-  },
-];
-
-const productionHeaders = [
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self';",
-      "script-src 'self' 'unsafe-inline';",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
-      "font-src 'self' https://fonts.gstatic.com data:;",
-      "img-src 'self' data: blob: https:;",
-      "connect-src 'self';",
-      "object-src 'none';",
-      "base-uri 'self';",
-      "form-action 'self' mailto:;",
-      "frame-ancestors 'none';",
-      "upgrade-insecure-requests;",
-    ].join(" "),
-  },
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload",
-  },
-  {
-    key: "X-Frame-Options",
-    value: "DENY",
-  },
-  ...commonHeaders,
-];
-
-// In development we relax the CSP so Turbopack Fast Refresh and preview
-// iframes (e.g. Antigravity Jetski) work without console errors: allow
-// 'unsafe-eval' for HMR/refresh tooling and drop X-Frame-Options so the
-// host iframe can embed the page.
-const devHeaders = [
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self';",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval';",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
-      "font-src 'self' https://fonts.gstatic.com data:;",
-      "img-src 'self' data: blob: https:;",
-      "connect-src 'self';",
-      "object-src 'none';",
+      "style-src 'self' 'unsafe-inline';",
+      "img-src 'self' data: blob:;",
+      "media-src 'self' blob:;",
+      "font-src 'self' data:;",
+      "connect-src 'self' https:;",
+      "frame-ancestors 'none';",
       "base-uri 'self';",
-      "form-action 'self' mailto:;",
-      "frame-ancestors 'self';",
+      "form-action 'self'",
     ].join(" "),
   },
-  ...commonHeaders,
+];
+
+// Development keeps HMR ('unsafe-eval'), local video, and host preview iframes
+// working while still sending the baseline hardening headers.
+const devHeaders = [
+  {
+    key: "X-Content-Type-Options",
+    value: "nosniff",
+  },
+  {
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  },
+  {
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=(), browsing-topics=()",
+  },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self';",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval';",
+      "style-src 'self' 'unsafe-inline';",
+      "img-src 'self' data: blob:;",
+      "media-src 'self' blob:;",
+      "font-src 'self' data:;",
+      "connect-src 'self' https:;",
+      "base-uri 'self';",
+      "form-action 'self'",
+    ].join(" "),
+  },
 ];
 
 const nextConfig = {

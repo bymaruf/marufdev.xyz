@@ -1,4 +1,4 @@
 Contact: mailto:mo.marufhasan@gmail.com
-Preferred-Languages: en
+Preferred-Languages: en, bn
 Canonical: https://marufdev.xyz/.well-known/security.txt
-Expires: 2027-11-20T00:00:00.000Z
+Expires: 2027-11-22T00:00:00.000Z
