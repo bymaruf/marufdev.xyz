@@ -166,6 +166,8 @@ export default function Home() {
   const modalBodyRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLElement | null>(null);
   const isKeyScrollingRef = useRef(false);
+  const wheelLockUntilRef = useRef(0);
+  const snapRestoreTimerRef = useRef(0);
   const hashRef = useRef<SectionId | null>(null);
   const initialHashRef = useRef<string>(
     typeof window === "undefined" ? "" : window.location.hash
@@ -325,7 +327,18 @@ export default function Home() {
 
     // 0.55 is the primary trigger; the live ratio check keeps tall mobile
     // sections (which can never reach 0.55) in sync too.
-    const computeActive = () => {
+    // Nav pill + URL are updated only after scrolling settles. No setState or
+    // history writes per scroll frame, so the stage's rAF compositing is free
+    // to run at 60 FPS through every section transition.
+    let settleTimer = 0;
+    const applyActive = (id: SectionId) => {
+      setActiveSection(id);
+      if (hashRef.current !== id) {
+        hashRef.current = id;
+        window.history.replaceState(null, "", `#${id}`);
+      }
+    };
+    const computeActive = (immediate = false) => {
       const rootRect = root.getBoundingClientRect();
       let bestId: SectionId | null = null;
       let bestRatio = -1;
@@ -344,16 +357,18 @@ export default function Home() {
         }
       });
 
-      if (bestId) {
-        setActiveSection(bestId);
-        if (hashRef.current !== bestId) {
-          hashRef.current = bestId;
-          window.history.replaceState(null, "", `#${bestId}`);
-        }
+      if (!bestId) return;
+      const activeId = bestId;
+      window.clearTimeout(settleTimer);
+      if (immediate) {
+        applyActive(activeId);
+      } else {
+        settleTimer = window.setTimeout(() => applyActive(activeId), 150);
       }
     };
 
-    const observer = new IntersectionObserver(computeActive, {
+    const onScroll = () => computeActive();
+    const observer = new IntersectionObserver(onScroll, {
       root,
       threshold: [0, 0.55],
     });
@@ -363,12 +378,13 @@ export default function Home() {
       if (element) observer.observe(element);
     });
 
-    root.addEventListener("scroll", computeActive, { passive: true });
-    computeActive();
+    root.addEventListener("scroll", onScroll, { passive: true });
+    computeActive(true);
 
     return () => {
+      window.clearTimeout(settleTimer);
       observer.disconnect();
-      root.removeEventListener("scroll", computeActive);
+      root.removeEventListener("scroll", onScroll);
     };
   }, [setActiveSection]);
 
@@ -413,7 +429,11 @@ export default function Home() {
         return;
       }
 
-      if (isKeyScrollingRef.current) return;
+      // A desktop wheel transition owns the scroll until its cooldown ends.
+      // On mobile the wheel lock is never set, so keyboard stepping is exact.
+      if (isKeyScrollingRef.current || performance.now() < wheelLockUntilRef.current) {
+        return;
+      }
 
       // Find the section closest to the viewport top rather than assuming
       // every section is exactly one container tall (mobile dvh / min-h-screen).
@@ -475,6 +495,96 @@ export default function Home() {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.clearTimeout(keyTimer);
+    };
+  }, [selectedProject, isPhotoExpanded]);
+
+  // Desktop-only one-section-per-gesture wheel stepping. Mobile (<768px)
+  // never attaches this listener: touch scrolling and carousel snapping stay
+  // completely native. The cooldown swallows trackpad momentum, and snap is
+  // parked only while our own smooth scroll runs so it cannot fight it.
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const COOLDOWN_MS = 800;
+    const MIN_DELTA = 15;
+
+    const currentSectionIndex = () => {
+      const containerTop = container.getBoundingClientRect().top;
+      let index = 0;
+      let closest = Infinity;
+      SECTIONS.forEach((id, candidate) => {
+        const section = document.getElementById(id);
+        if (!section) return;
+        const distance = Math.abs(
+          section.getBoundingClientRect().top - containerTop
+        );
+        if (distance < closest) {
+          closest = distance;
+          index = candidate;
+        }
+      });
+      return index;
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (window.innerWidth < 768) return;
+      if (selectedProject || isPhotoExpanded) return;
+      if (Math.abs(event.deltaY) <= MIN_DELTA) return;
+
+      const now = performance.now();
+      if (now < wheelLockUntilRef.current || isKeyScrollingRef.current) {
+        event.preventDefault();
+        return;
+      }
+
+      const current = currentSectionIndex();
+      const next = Math.min(
+        Math.max(current + (event.deltaY > 0 ? 1 : -1), 0),
+        SECTIONS.length - 1
+      );
+
+      // At the first/last section, swallow the event so momentum cannot
+      // rubber-band past the ends or skip a section on the way back.
+      if (next === current) {
+        event.preventDefault();
+        return;
+      }
+
+      const target = document.getElementById(SECTIONS[next]);
+      if (!target) return;
+
+      event.preventDefault();
+      wheelLockUntilRef.current = now + COOLDOWN_MS;
+
+      // Native mandatory snap is restored once the transition has settled;
+      // until then it stays out of scrollIntoView's way.
+      container.style.scrollSnapType = "none";
+      window.clearTimeout(snapRestoreTimerRef.current);
+      snapRestoreTimerRef.current = window.setTimeout(() => {
+        container.style.scrollSnapType = "";
+      }, COOLDOWN_MS);
+
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    // If the viewport flips to mobile mid-transition, hand snap straight back
+    // to native CSS — never leave a mobile container with snap parked.
+    const onResize = () => {
+      if (window.innerWidth >= 768) return;
+      window.clearTimeout(snapRestoreTimerRef.current);
+      container.style.scrollSnapType = "";
+      wheelLockUntilRef.current = 0;
+    };
+
+    container.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("resize", onResize);
+    return () => {
+      container.removeEventListener("wheel", onWheel);
+      window.removeEventListener("resize", onResize);
+      window.clearTimeout(snapRestoreTimerRef.current);
+      container.style.scrollSnapType = "";
+      wheelLockUntilRef.current = 0;
     };
   }, [selectedProject, isPhotoExpanded]);
 
