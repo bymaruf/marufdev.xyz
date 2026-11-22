@@ -55,6 +55,8 @@ export default function BlackHoleStage() {
   const hasStartedFocusRef = useRef(false);
 
   useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 767.98px)");
+    let isMobile = mobileQuery.matches;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reducedMotion) {
       edgeRef.current?.pause();
@@ -62,6 +64,11 @@ export default function BlackHoleStage() {
       layer2BRef.current?.pause();
       vortexRef.current?.pause();
     }
+
+    // The second focus buffer is display:none on mobile. Never fetch or
+    // decode it there; desktop keeps it preloaded for the seamless handoff.
+    const bufferB = layer2BRef.current;
+    if (bufferB) bufferB.preload = isMobile ? "none" : "auto";
 
     let targetProgress = 0;
     let smoothProgress = 0;
@@ -71,9 +78,16 @@ export default function BlackHoleStage() {
     let focusBlendB = 0;
     let lastActiveTime = 0;
 
-    // Low Power Mode on iOS can silently refuse muted autoplay. Remember a
-    // rejected play() and retry on the first real user gesture so the Focus
-    // video never stays frozen on its poster.
+    const resetFocusLoop = () => {
+      activeLayer = "A";
+      focusBlendA = 1;
+      focusBlendB = 0;
+      lastActiveTime = 0;
+      hasStartedFocusRef.current = false;
+    };
+
+    // Low Power Mode on iOS can silently refuse muted autoplay. A rejected
+    // play() is retried on the first real gesture by re-running apply().
     let resumeOnGesture = false;
     const tryPlay = (video: HTMLVideoElement | null) => {
       if (!video || reducedMotion) return;
@@ -89,148 +103,198 @@ export default function BlackHoleStage() {
         );
       }
     };
-    const onUserGesture = () => {
-      if (!resumeOnGesture) return;
-      const active =
-        activeLayer === "A" ? layer2ARef.current : layer2BRef.current;
-      const standby =
-        activeLayer === "A" ? layer2BRef.current : layer2ARef.current;
-      tryPlay(active);
-      if (standby && standby.currentTime > 0) tryPlay(standby);
+    const setPlayback = (video: HTMLVideoElement | null, shouldPlay: boolean) => {
+      if (!video || reducedMotion) return;
+      if (shouldPlay) {
+        if (video.paused) tryPlay(video);
+      } else if (!video.paused) {
+        video.pause();
+      }
     };
+    // The rAF loop also drives the desktop crossfade while scroll is settled,
+    // so cache written values to keep it from dirtying the DOM every frame.
+    const setOpacity = (element: HTMLElement | null, value: number) => {
+      if (!element) return;
+      const next = value.toFixed(3);
+      if (element.style.opacity !== next) element.style.opacity = next;
+    };
+
+    const onUserGesture = () => {
+      if (resumeOnGesture) apply(smoothProgress);
+    };
+    const onBreakpointChange = () => {
+      isMobile = mobileQuery.matches;
+      if (bufferB) bufferB.preload = isMobile ? "none" : "auto";
+      if (isMobile) {
+        resetFocusLoop();
+        bufferB?.pause();
+      }
+      if (!raf) raf = window.requestAnimationFrame(tick);
+      apply(smoothProgress);
+    };
+    mobileQuery.addEventListener("change", onBreakpointChange);
     window.addEventListener("pointerdown", onUserGesture, { passive: true });
     window.addEventListener("touchstart", onUserGesture, { passive: true });
 
     const apply = (value: number) => {
       const p = Math.min(3, Math.max(0, value));
-      const stops = window.innerWidth < 768 ? MOBILE_STOPS : DESKTOP_STOPS;
+      const stops = isMobile ? MOBILE_STOPS : DESKTOP_STOPS;
       const index = Math.min(2, Math.floor(p));
       const t = smoothstep(0, 1, p - index);
       const from = stops[index];
       const to = stops[index + 1];
 
       if (transformRef.current) {
-        transformRef.current.style.transform =
-          `translate(${lerp(from.x, to.x, t)}%, ${lerp(from.y, to.y, t)}%) ` +
+        // translate3d promotes the video stack to its own compositor layer;
+        // only transform/opacity ever change, never layout properties.
+        const nextTransform =
+          `translate3d(${lerp(from.x, to.x, t)}%, ${lerp(from.y, to.y, t)}%, 0) ` +
           `scale(${lerp(from.scale, to.scale, t)})`;
+        if (transformRef.current.style.transform !== nextTransform) {
+          transformRef.current.style.transform = nextTransform;
+        }
       }
 
-      // Edge-on for Home/Contact, dual-buffered 360° orbit for Focus,
-      // face-on vortex for Projects. Normalized bells keep brightness steady.
+      // Edge-on for Home/Contact, 360° orbit for Focus, vortex for Projects.
+      // Normalized bells keep brightness steady across the crossfades.
       const wHome = bell(p, 0);
       const wFocus = bell(p, 1);
       const wProjects = bell(p, 2);
       const wContact = bell(p, 3);
       const total = wHome + wFocus + wProjects + wContact;
+      const edgeWeight = (wHome + wContact) / total;
       const focusWeight = wFocus / total;
+      const projectsWeight = wProjects / total;
 
-      if (edgeRef.current) {
-        edgeRef.current.style.opacity = String((wHome + wContact) / total);
-      }
-      if (vortexRef.current) {
-        vortexRef.current.style.opacity = String(wProjects / total);
-      }
-
+      const edge = edgeRef.current;
       const a = layer2ARef.current;
-      const b = layer2BRef.current;
+      const b = bufferB;
+      const vortex = vortexRef.current;
 
-      if (p < 0.35) {
-        // On Home: both buffers parked on frame 0, A armed for the next entry.
-        for (const video of [a, b]) {
-          if (video) {
-            video.pause();
-            if (video.currentTime > 0) video.currentTime = 0;
-          }
+      if (isMobile) {
+        // Mobile: exactly one decoder runs. The outgoing clip keeps its last
+        // frame while its opacity fades out via the same bell curves, so the
+        // visual crossfade stays smooth with only the incoming clip playing.
+        // A uses its native loop; B is hidden and never starts.
+        setOpacity(edge, edgeWeight);
+        setOpacity(a, focusWeight);
+        setOpacity(b, 0);
+        setOpacity(vortex, projectsWeight);
+
+        let dominant: HTMLVideoElement | null = edge;
+        let dominantWeight = edgeWeight;
+        if (a && focusWeight > dominantWeight) {
+          dominant = a;
+          dominantWeight = focusWeight;
         }
-        activeLayer = "A";
-        focusBlendA = 1;
-        focusBlendB = 0;
-        lastActiveTime = 0;
-        hasStartedFocusRef.current = false;
+        if (vortex && projectsWeight > dominantWeight) {
+          dominant = vortex;
+        }
+        setPlayback(edge, dominant === edge);
+        setPlayback(a, dominant === a);
+        setPlayback(vortex, dominant === vortex);
+        if (b && !b.paused) b.pause();
       } else {
-        // Entry cue: A starts from 0.0s exactly as before, once.
-        if (!hasStartedFocusRef.current && !reducedMotion) {
-          hasStartedFocusRef.current = true;
-          lastActiveTime = 0;
-          tryPlay(a);
-        }
+        // Desktop keeps the dual-buffer handoff for a seamless 12s loop.
+        setPlayback(edge, edgeWeight > 0.01);
+        setPlayback(vortex, projectsWeight > 0.01);
+        setOpacity(edge, edgeWeight);
+        setOpacity(vortex, projectsWeight);
 
-        // Loop handoff — evaluated on every rAF frame (apply is called by tick).
-        const activeEl = activeLayer === "A" ? a : b;
-        const standbyEl = activeLayer === "A" ? b : a;
-        if (activeEl && standbyEl) {
-          const dur = activeEl.duration;
-          const currentTime = activeEl.currentTime;
-          // Native `loop` wraps currentTime to 0 instead of firing `ended`,
-          // so finish the crossfade on the wrap as well as on the tail.
-          const wrapped = currentTime < lastActiveTime - 0.5;
-          lastActiveTime = currentTime;
-          const inTail =
-            Number.isFinite(dur) &&
-            dur > 2 &&
-            currentTime >= dur - CROSSFADE_SEC;
-
-          if (inTail || wrapped) {
-            if (standbyEl.paused) {
-              standbyEl.currentTime = 0;
-              tryPlay(standbyEl);
+        if (p < 0.35) {
+          // On Home: both buffers parked on frame 0, A armed for the next entry.
+          for (const video of [a, b]) {
+            if (video) {
+              video.pause();
+              if (video.currentTime > 0) video.currentTime = 0;
             }
+          }
+          resetFocusLoop();
+        } else {
+          // Entry cue: A starts from 0.0s exactly as before, once.
+          if (!hasStartedFocusRef.current && !reducedMotion) {
+            hasStartedFocusRef.current = true;
+            lastActiveTime = 0;
+            tryPlay(a);
+          }
 
-            const blend = wrapped
-              ? 1
-              : clamp01((currentTime - (dur - CROSSFADE_SEC)) / CROSSFADE_SEC);
-            const ease = smoothstep(0, 1, blend);
-            if (activeLayer === "A") {
-              focusBlendA = 1 - ease;
-              focusBlendB = ease;
-            } else {
-              focusBlendB = 1 - ease;
-              focusBlendA = ease;
-            }
+          // Loop handoff — evaluated on every rAF frame (apply is called by tick).
+          const activeEl = activeLayer === "A" ? a : b;
+          const standbyEl = activeLayer === "A" ? b : a;
+          if (activeEl && standbyEl) {
+            const dur = activeEl.duration;
+            const currentTime = activeEl.currentTime;
+            // Native `loop` wraps currentTime to 0 instead of firing `ended`,
+            // so finish the crossfade on the wrap as well as on the tail.
+            const wrapped = currentTime < lastActiveTime - 0.5;
+            lastActiveTime = currentTime;
+            const inTail =
+              Number.isFinite(dur) &&
+              dur > 2 &&
+              currentTime >= dur - CROSSFADE_SEC;
 
-            if (blend >= 1 || activeEl.ended || wrapped) {
-              activeEl.pause();
-              activeEl.currentTime = 0;
-              lastActiveTime = 0;
+            if (inTail || wrapped) {
+              if (standbyEl.paused) {
+                standbyEl.currentTime = 0;
+                tryPlay(standbyEl);
+              }
+
+              const blend = wrapped
+                ? 1
+                : clamp01((currentTime - (dur - CROSSFADE_SEC)) / CROSSFADE_SEC);
+              const ease = smoothstep(0, 1, blend);
               if (activeLayer === "A") {
-                focusBlendA = 0;
-                focusBlendB = 1;
-                activeLayer = "B";
+                focusBlendA = 1 - ease;
+                focusBlendB = ease;
               } else {
-                focusBlendB = 0;
-                focusBlendA = 1;
-                activeLayer = "A";
+                focusBlendB = 1 - ease;
+                focusBlendA = ease;
+              }
+
+              if (blend >= 1 || activeEl.ended || wrapped) {
+                activeEl.pause();
+                activeEl.currentTime = 0;
+                lastActiveTime = 0;
+                if (activeLayer === "A") {
+                  focusBlendA = 0;
+                  focusBlendB = 1;
+                  activeLayer = "B";
+                } else {
+                  focusBlendB = 0;
+                  focusBlendA = 1;
+                  activeLayer = "A";
+                }
               }
             }
           }
         }
+        // Blend within Focus is multiplied by the section weight so total
+        // brightness stays constant through both the section and loop fades.
+        setOpacity(a, focusWeight * focusBlendA);
+        setOpacity(b, focusWeight * focusBlendB);
       }
 
-      // Blend within Focus is multiplied by the section weight so total
-      // brightness stays constant through both the section and loop fades.
-      if (a) a.style.opacity = String(focusWeight * focusBlendA);
-      if (b) b.style.opacity = String(focusWeight * focusBlendB);
-
-      if (fadeRef.current) {
-        fadeRef.current.style.opacity = String(smoothstep(2.2, 2.8, p));
-      }
-      if (topFadeRef.current) {
-        topFadeRef.current.style.opacity = String(smoothstep(2.3, 3, p));
-      }
+      setOpacity(fadeRef.current, smoothstep(2.2, 2.8, p));
+      setOpacity(topFadeRef.current, smoothstep(2.3, 3, p));
     };
 
-    // Continuous damped loop: fast wheel/navbar jumps glide over ~600ms.
+    // Damped loop: fast scroll/navbar jumps glide over ~600ms. On mobile
+    // there is no crossfade to drive, so it idles once progress has settled.
     const tick = () => {
+      raf = 0;
       smoothProgress += (targetProgress - smoothProgress) * 0.085;
       if (Math.abs(targetProgress - smoothProgress) < 0.0005) {
         smoothProgress = targetProgress;
       }
       apply(smoothProgress);
-      raf = window.requestAnimationFrame(tick);
+      if (!isMobile || smoothProgress !== targetProgress) {
+        raf = window.requestAnimationFrame(tick);
+      }
     };
 
     stageUpdateRef.current = (progress: number) => {
       targetProgress = progress;
+      if (!raf) raf = window.requestAnimationFrame(tick);
     };
 
     apply(smoothProgress);
@@ -239,6 +303,7 @@ export default function BlackHoleStage() {
     return () => {
       stageUpdateRef.current = null;
       window.cancelAnimationFrame(raf);
+      mobileQuery.removeEventListener("change", onBreakpointChange);
       window.removeEventListener("pointerdown", onUserGesture);
       window.removeEventListener("touchstart", onUserGesture);
     };
@@ -251,15 +316,17 @@ export default function BlackHoleStage() {
     >
       <div
         ref={transformRef}
-        className="absolute inset-0 will-change-transform"
-        style={{ transform: "translate(22%, 0%) scale(1.48)" }}
+        className="absolute inset-0"
+        style={{
+          transform: "translate3d(22%, 0%, 0) scale(1.48)",
+          willChange: "transform, opacity",
+        }}
       >
         <video
           ref={edgeRef}
           src="/blackhole-horizon-loop.mp4"
-          className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out"
-          style={{ opacity: 1 }}
-          autoPlay
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ opacity: 1, willChange: "opacity" }}
           loop
           muted
           playsInline
@@ -268,8 +335,8 @@ export default function BlackHoleStage() {
         <video
           ref={layer2ARef}
           poster={FOCUS_POSTER}
-          className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out"
-          style={{ opacity: 0 }}
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ opacity: 0, willChange: "opacity" }}
           loop
           muted
           playsInline
@@ -286,11 +353,13 @@ export default function BlackHoleStage() {
             type="video/mp4"
           />
         </video>
+        {/* Mobile decodes only the first focus clip; this second buffer is
+            display:none and never preloaded there. Desktop keeps the handoff. */}
         <video
           ref={layer2BRef}
           poster={FOCUS_POSTER}
-          className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out"
-          style={{ opacity: 0 }}
+          className="absolute inset-0 hidden h-full w-full object-contain md:block"
+          style={{ opacity: 0, willChange: "opacity" }}
           loop
           muted
           playsInline
@@ -310,9 +379,8 @@ export default function BlackHoleStage() {
         <video
           ref={vortexRef}
           src="/blackhole-vortex-loop.mp4"
-          className="absolute inset-0 h-full w-full object-contain transition-opacity duration-700 ease-out"
-          style={{ opacity: 0 }}
-          autoPlay
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ opacity: 0, willChange: "opacity" }}
           loop
           muted
           playsInline

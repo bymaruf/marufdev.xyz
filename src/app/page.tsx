@@ -599,7 +599,7 @@ export default function Home() {
               {FOCUS_PILLARS.map((pillar) => (
                 <article
                   key={pillar.number}
-                  className="min-w-[84vw] snap-center rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0 max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center [@media(max-width:767px)_and_(max-height:700px)]:p-4"
+                  className="min-w-[84vw] snap-center rounded-2xl border border-white/10 bg-neutral-950/80 p-6 sm:p-8 md:min-w-0 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center [@media(max-width:767px)_and_(max-height:700px)]:p-4"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span className={`${legible} font-mono text-xs tabular-nums text-amber-200/70`}>
@@ -631,7 +631,7 @@ export default function Home() {
                 {TECH_STACK.map((tech) => (
                   <span
                     key={tech}
-                    className={`${legible} rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-xs text-white/80 backdrop-blur-md max-md:px-3 max-md:py-1.5`}
+                    className={`${legible} rounded-full border border-white/10 bg-neutral-950/70 px-4 py-2 text-xs text-white/80 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md max-md:px-3 max-md:py-1.5`}
                   >
                     {tech}
                   </span>
@@ -668,7 +668,7 @@ export default function Home() {
                 <article
                   key={project.id}
                   onClick={() => setSelectedProject(project)}
-                  className="flex h-full min-w-[84vw] cursor-pointer snap-center flex-col rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0 max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center"
+                  className="flex h-full min-w-[84vw] cursor-pointer snap-center flex-col rounded-2xl border border-white/10 bg-neutral-950/80 p-6 sm:p-8 md:min-w-0 md:border-white/12 md:bg-white/[0.03] md:backdrop-blur-md max-md:w-[85vw] max-md:max-w-[340px] max-md:shrink-0 max-md:snap-center"
                 >
                   <p className={`${legible} font-mono text-xs leading-5 text-amber-200/70`}>
                     {project.category}
@@ -737,7 +737,7 @@ export default function Home() {
               and secure software systems.
             </p>
 
-            <div className={`rounded-2xl border border-white/15 bg-black/55 backdrop-blur-xl ${isMoreInfoOpen
+            <div className={`rounded-2xl border border-white/15 bg-neutral-950/85 md:bg-black/55 md:backdrop-blur-xl ${isMoreInfoOpen
               ? "mt-1 md:mt-4 max-md:space-y-1 max-md:p-1.5 md:p-6 [@media(max-width:767px)_and_(max-height:700px)]:p-0.5"
               : "mt-5 md:mt-10 max-md:space-y-3 max-md:p-3 md:p-8 [@media(max-width:767px)_and_(max-height:700px)]:p-2.5"
               }`}>
@@ -777,7 +777,7 @@ export default function Home() {
                   type="button"
                   onClick={() => setIsMoreInfoOpen((open) => !open)}
                   aria-expanded={isMoreInfoOpen}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-white/75 outline-none backdrop-blur-md transition-colors hover:bg-white/[0.1] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-neutral-950/80 px-3 py-1 text-[11px] font-medium text-white/75 outline-none transition-colors hover:bg-white/[0.1] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300 md:bg-white/[0.05] md:backdrop-blur-md"
                 >
                   {isMoreInfoOpen ? (
                     <EyeOff className="h-3.5 w-3.5" />
@@ -913,7 +913,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => scrollToSection("home")}
-              className={`group inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-black/75 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300 ${isMoreInfoOpen
+              className={`group inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-neutral-950/85 px-5 py-2.5 text-sm font-medium text-white outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300 md:bg-black/75 md:backdrop-blur-md ${isMoreInfoOpen
                 ? "mt-3 max-md:mt-0 [@media(max-width:767px)_and_(max-height:700px)]:mt-0"
                 : "mt-10 max-md:mt-4 [@media(max-width:767px)_and_(max-height:700px)]:mt-3"
                 }`}
