@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ArrowRight, ArrowUp, ArrowUpRight, GraduationCap, Mail } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import {
+  ArrowRight,
+  ArrowUp,
+  ArrowUpRight,
+  Check,
+  Copy,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  Mail,
+  Phone,
+  X,
+} from "lucide-react";
 import GithubIcon from "@/components/icons/GithubIcon";
 import BlackHoleStage from "@/components/BlackHoleStage";
 import {
@@ -16,20 +29,149 @@ import {
   TECH_STACK,
 } from "@/data/portfolioData";
 
+type CaseStudy = {
+  id: string;
+  title: string;
+  category: string;
+  tagline: string;
+  summary: string;
+  stack: string[];
+  githubUrl: string;
+  problem: string;
+  architecture: string[];
+  security: string[];
+  highlights: string[];
+};
+
+type CaseStudyDetail = Omit<
+  CaseStudy,
+  "id" | "title" | "category" | "summary" | "stack" | "githubUrl"
+>;
+
+const PROJECT_DETAILS: Record<string, CaseStudyDetail> = {
+  vibereader: {
+    tagline: "An offline-first AI reading studio for Android",
+    problem:
+      "Readers need a private way to parse EPUB and PDF books and ask contextual questions without uploading their library to a cloud service.",
+    architecture: [
+      "Android API 24+ native EPUB/PDF parsing engine for on-device document text extraction and chapter structure.",
+      "Multi-provider AI Book Assistant supporting OpenCode Zen, Gemini, OpenAI, OpenRouter, Claude, Groq, and DeepSeek through one interface.",
+      "Offline Android and Edge Neural text-to-speech plus a 1080×2400 Quote Wallpaper Studio generated from book passages.",
+    ],
+    security: [
+      "Local-first document storage keeps books and reading notes on the device; no server-side content copy.",
+      "API keys are isolated from document context, and file inputs are sanitized before parsing or any model call.",
+    ],
+    highlights: ["Android API 24+", "Offline-First", "Multi-LLM"],
+  },
+  "banglish-ai": {
+    tagline: "Conversational AI for Banglish workflows",
+    problem:
+      "Bengali-English speakers lack natural conversational interfaces because most AI tools assume English-only prompts and phrasing.",
+    architecture: [
+      "Lightweight HTML/CSS and JavaScript single-page interface with no backend dependency.",
+      "Client-side Banglish tokenization and prompt shaping for conversational AI workflows.",
+      "Responsive message layout and progressive interaction states for rapid concept iteration.",
+    ],
+    security: [
+      "Local-first client processing with no server-side conversation storage.",
+      "User text is sanitized and explicit before being handed to any external AI provider.",
+    ],
+    highlights: ["Web Prototype", "Banglish UX", "No Backend"],
+  },
+  lifestream: {
+    tagline: "A deterministic systems core in modern C++",
+    problem:
+      "Data processing on constrained systems needs predictable, low-overhead execution without garbage-collection pauses.",
+    architecture: [
+      "Manual memory management with strict ownership for deterministic runtime behavior.",
+      "Template-based structured data containers for handling streaming records.",
+      "Modular processing pipeline with explicit error handling at every stage.",
+    ],
+    security: [
+      "No network surface — the application runs entirely locally.",
+      "Strict input validation and bounds checks on all parsed records.",
+    ],
+    highlights: ["C++", "Deterministic", "Local-Only"],
+  },
+};
+
+const CASE_STUDIES: CaseStudy[] = PROJECTS.map((project) => ({
+  id: project.id,
+  title: project.title,
+  category: project.category,
+  summary: project.description,
+  stack: project.tags,
+  githubUrl: project.githubUrl,
+  ...PROJECT_DETAILS[project.id],
+}));
+
 const ctaPill =
   "inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-white/15 bg-white/[0.05] hover:bg-white/[0.1] hover:border-white/25 text-sm font-medium text-white transition-all max-md:gap-1.5 max-md:px-4 max-md:py-2 max-md:text-xs";
 
 const legible = "drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]";
 const SECTIONS: SectionId[] = ["home", "focus", "projects", "contact"];
 
+// Shared label/value row so the base details and the expanded identity rows
+// read as a single native table.
+const contactRow = (compact: boolean) =>
+  `grid gap-1 border-t border-white/10 sm:grid-cols-[150px_1fr] sm:gap-6 ${compact
+    ? "py-2.5 max-md:py-1 md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-0"
+    : "py-2.5 md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-1"
+  }`;
+
+const LINKEDIN_URL = "https://www.linkedin.com/in/maruf-hasan-a530b1424";
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61577838673467";
+const PHONE_DISPLAY = "+880 1580-506767";
+const PHONE_HREF = "tel:+8801580506767";
+
+function LinkedInIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .78 0 1.75v20.5c0 .97.79 1.75 1.77 1.75h20.45c.98 0 1.78-.78 1.78-1.75V1.75C24 .78 23.2 0 22.22 0z" />
+    </svg>
+  );
+}
+
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12z" />
+    </svg>
+  );
+}
+
 export default function Home() {
   const { setActiveSection, scrollToSection, stageUpdateRef } = useActiveSection();
+  const [isMoreInfoOpen, setIsMoreInfoOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<CaseStudy | null>(null);
+  const [isPhotoExpanded, setIsPhotoExpanded] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const copyTimerRef = useRef(0);
+  const modalBodyRef = useRef<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLElement | null>(null);
   const isKeyScrollingRef = useRef(false);
   const hashRef = useRef<SectionId | null>(null);
   const initialHashRef = useRef<string>(
     typeof window === "undefined" ? "" : window.location.hash
   );
+
+  useEffect(() => () => window.clearTimeout(copyTimerRef.current), []);
+
+  useEffect(() => {
+    if (selectedProject) modalBodyRef.current?.focus();
+  }, [selectedProject]);
+
+  const copyPhone = async () => {
+    try {
+      await navigator.clipboard.writeText(PHONE_DISPLAY);
+      setCopiedPhone(true);
+      window.clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = window.setTimeout(() => setCopiedPhone(false), 1600);
+    } catch {
+      // Clipboard can be unavailable in insecure contexts — leave the label intact.
+    }
+  };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -128,6 +270,16 @@ export default function Home() {
     let keyTimer = 0;
 
     const onKeyDown = (event: KeyboardEvent) => {
+      // While the case study dialog is open, Escape closes it and every other
+      // key (including arrows) is left alone so the modal body can scroll.
+      if (selectedProject || isPhotoExpanded) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setSelectedProject(null);
+          setIsPhotoExpanded(false);
+        }
+        return;
+      }
       if (event.defaultPrevented) return;
       if (event.ctrlKey || event.metaKey || event.altKey) return;
 
@@ -185,7 +337,7 @@ export default function Home() {
       window.removeEventListener("keydown", onKeyDown);
       window.clearTimeout(keyTimer);
     };
-  }, []);
+  }, [selectedProject, isPhotoExpanded]);
 
   return (
     <>
@@ -317,10 +469,11 @@ export default function Home() {
             </header>
 
             <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory -mx-4 px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:overflow-visible md:mx-0 md:px-0 md:pb-0">
-              {PROJECTS.map((project) => (
+              {CASE_STUDIES.map((project) => (
                 <article
                   key={project.id}
-                  className="flex h-full min-w-[84vw] snap-center flex-col rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0"
+                  onClick={() => setSelectedProject(project)}
+                  className="flex h-full min-w-[84vw] cursor-pointer snap-center flex-col rounded-2xl border border-white/12 bg-white/[0.03] p-6 backdrop-blur-md sm:p-8 md:min-w-0"
                 >
                   <p className={`${legible} font-mono text-xs leading-5 text-amber-200/70`}>
                     {project.category}
@@ -329,10 +482,10 @@ export default function Home() {
                     {project.title}
                   </h3>
                   <p className={`${legible} mt-3 flex-1 text-sm leading-6 text-white/65`}>
-                    {project.description}
+                    {project.summary}
                   </p>
                   <div className="mt-6 flex flex-wrap gap-2">
-                    {project.tags.map((tag) => (
+                    {project.stack.map((tag) => (
                       <span
                         key={tag}
                         className={`${legible} rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-xs text-white/70`}
@@ -341,11 +494,23 @@ export default function Home() {
                       </span>
                     ))}
                   </div>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setSelectedProject(project);
+                    }}
+                    className={`${legible} mt-4 inline-flex w-fit items-center gap-1.5 text-xs font-medium text-amber-200/80 outline-none transition-colors hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-300`}
+                  >
+                    View Case Study
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
                   <a
                     href={project.githubUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`${legible} mt-8 inline-flex items-center gap-2 border-t border-white/10 pt-6 text-sm text-white/85 outline-none transition-colors hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-300`}
+                    onClick={(event) => event.stopPropagation()}
+                    className={`${legible} mt-4 inline-flex items-center gap-2 border-t border-white/10 pt-4 text-sm text-white/85 outline-none transition-colors hover:text-amber-200 focus-visible:ring-2 focus-visible:ring-amber-300`}
                   >
                     <GithubIcon className="h-4 w-4" />
                     View repository
@@ -360,41 +525,82 @@ export default function Home() {
         {/* 04 — Beyond the horizon */}
         <section
           id="contact"
-          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
+          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:pt-24 md:pb-8 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-3"
         >
           <div className="mx-auto w-full max-w-3xl">
             <h2 className="text-on-video mt-4 text-balance text-4xl font-medium tracking-[-0.035em] text-white sm:text-6xl max-md:mt-0 max-md:text-3xl">
               Beyond the horizon
             </h2>
-            <p className="text-on-video mt-5 max-w-xl text-base leading-7 text-white/70 max-md:mt-3 max-md:text-sm max-md:leading-6">
+            <p className="text-on-video mt-5 max-w-xl text-base leading-7 text-white/70 max-md:mt-2 max-md:text-sm max-md:leading-6">
               {PERSONAL_INFO.role} working across application security, LLM hardening,
               and secure software systems.
             </p>
 
-            <div className="mt-6 md:mt-10 max-md:space-y-4 divide-y divide-white/10 rounded-2xl border border-white/15 bg-black/55 p-5 backdrop-blur-xl md:p-8">
-              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6 max-md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-2">
+            <div className={`rounded-2xl border border-white/15 bg-black/55 backdrop-blur-xl ${isMoreInfoOpen
+              ? "mt-1 md:mt-4 max-md:space-y-1 max-md:p-1.5 md:p-6 [@media(max-width:767px)_and_(max-height:700px)]:p-0.5"
+              : "mt-5 md:mt-10 max-md:space-y-3 max-md:p-3 md:p-8 [@media(max-width:767px)_and_(max-height:700px)]:p-2.5"
+              }`}>
+              <div className="flex items-center justify-between gap-3 pb-1 md:pb-2">
+                {isMoreInfoOpen ? (
+                  <div className="flex min-w-0 items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsPhotoExpanded(true)}
+                      title="Expand photo"
+                      aria-label="Expand photo"
+                      className="group h-16 w-16 shrink-0 overflow-hidden rounded-full border border-white/15 bg-white/[0.03] outline-none ring-amber-300/40 transition hover:ring-2 focus-visible:ring-2 md:h-20 md:w-20 [@media(max-width:767px)_and_(max-height:700px)]:h-12 [@media(max-width:767px)_and_(max-height:700px)]:w-12"
+                    >
+                      <Image
+                        src="/maruf-profile.png"
+                        alt="Md. Maruf Hasan"
+                        width={80}
+                        height={80}
+                        className="h-full w-full bg-transparent object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </button>
+                    <div className="min-w-0">
+                      <p className="text-lg font-semibold text-white md:text-xl">
+                        Md. Maruf Hasan
+                      </p>
+                      <p className="text-xs text-white/60 md:text-sm">
+                        AI Engineer &amp; Cybersecurity Builder
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/40">
+                    Details
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsMoreInfoOpen((open) => !open)}
+                  aria-expanded={isMoreInfoOpen}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.05] px-3 py-1 text-[11px] font-medium text-white/75 outline-none backdrop-blur-md transition-colors hover:bg-white/[0.1] hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                >
+                  {isMoreInfoOpen ? (
+                    <EyeOff className="h-3.5 w-3.5" />
+                  ) : (
+                    <Eye className="h-3.5 w-3.5" />
+                  )}
+                  {isMoreInfoOpen ? "Hide Info" : "More Info"}
+                </button>
+              </div>
+
+              <div className={contactRow(isMoreInfoOpen)}>
                 <span className="flex items-center gap-2 text-xs font-medium text-white/50">
                   <GraduationCap className="h-4 w-4" />
                   Education
                 </span>
                 <div>
                   <p className="text-base text-white">{EDUCATION.degree}</p>
-                  <p className="mt-1 text-sm text-white/65">{EDUCATION.institution}</p>
+                  <p className={`mt-1 text-sm text-white/65 ${isMoreInfoOpen
+                    ? "[@media(max-width:767px)_and_(max-height:700px)]:hidden"
+                    : ""
+                    }`}>{EDUCATION.institution}</p>
                 </div>
               </div>
-              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6 max-md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-2">
-                <span className="flex items-center gap-2 text-xs font-medium text-white/50">
-                  <Mail className="h-4 w-4" />
-                  Contact
-                </span>
-                <a
-                  href={`mailto:${PERSONAL_INFO.email}`}
-                  className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
-                >
-                  {PERSONAL_INFO.email}
-                </a>
-              </div>
-              <div className="grid gap-1 py-5 sm:grid-cols-[150px_1fr] sm:gap-6 max-md:py-3 [@media(max-width:767px)_and_(max-height:700px)]:py-2">
+              <div className={contactRow(isMoreInfoOpen)}>
                 <span className="flex items-center gap-2 text-xs font-medium text-white/50">
                   <GithubIcon className="h-4 w-4" />
                   GitHub
@@ -409,23 +615,306 @@ export default function Home() {
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </a>
               </div>
+
+              <div
+                className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${isMoreInfoOpen
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0"
+                  }`}
+                aria-hidden={!isMoreInfoOpen}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className={contactRow(isMoreInfoOpen)}>
+                    <span className="flex items-center gap-2 text-xs font-medium text-white/50">
+                      <LinkedInIcon className="h-4 w-4" />
+                      LinkedIn
+                    </span>
+                    <a
+                      href={LINKEDIN_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                    >
+                      /in/bymaruf
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                  <div className={contactRow(isMoreInfoOpen)}>
+                    <span className="flex items-center gap-2 text-xs font-medium text-white/50">
+                      <FacebookIcon className="h-4 w-4" />
+                      Facebook
+                    </span>
+                    <a
+                      href={FACEBOOK_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                    >
+                      Maruf Hasan
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              <div className={contactRow(isMoreInfoOpen)}>
+                <span className="flex items-center gap-2 text-xs font-medium text-white/50">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </span>
+                <a
+                  href={`mailto:${PERSONAL_INFO.email}`}
+                  className="inline-flex w-fit items-center gap-2 text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                >
+                  {PERSONAL_INFO.email}
+                </a>
+              </div>
+
+              <div
+                className={`grid transition-[grid-template-rows,opacity] duration-500 ease-out ${isMoreInfoOpen
+                  ? "grid-rows-[1fr] opacity-100"
+                  : "grid-rows-[0fr] opacity-0"
+                  }`}
+                aria-hidden={!isMoreInfoOpen}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className={contactRow(isMoreInfoOpen)}>
+                    <span className="flex items-center gap-2 text-xs font-medium text-white/50">
+                      <Phone className="h-4 w-4" />
+                      Phone
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={PHONE_HREF}
+                        className="text-base text-white underline decoration-white/30 underline-offset-4 outline-none transition-colors hover:decoration-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                      >
+                        {PHONE_DISPLAY}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={copyPhone}
+                        aria-label="Copy phone number"
+                        title="Copy phone number"
+                        className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/60 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+                      >
+                        {copiedPhone ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={() => scrollToSection("home")}
-              className="group mt-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-black/75 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300 max-md:mt-6 [@media(max-width:767px)_and_(max-height:700px)]:mt-4"
+              className={`group inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-black/75 px-5 py-2.5 text-sm font-medium text-white backdrop-blur-md outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-amber-300 ${isMoreInfoOpen
+                ? "mt-3 max-md:mt-0 [@media(max-width:767px)_and_(max-height:700px)]:mt-0"
+                : "mt-10 max-md:mt-4 [@media(max-width:767px)_and_(max-height:700px)]:mt-3"
+                }`}
             >
               <ArrowUp className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5" />
               Back to Top
             </button>
 
-            <p className="text-on-video mt-12 font-mono text-xs text-white/60 max-md:mt-6 [@media(max-width:767px)_and_(max-height:700px)]:mt-4">
+            <p className={`text-on-video font-mono text-xs text-white/60 ${isMoreInfoOpen
+              ? "mt-3 max-md:mt-0 [@media(max-width:767px)_and_(max-height:700px)]:mt-0"
+              : "mt-12 max-md:mt-4 [@media(max-width:767px)_and_(max-height:700px)]:mt-3"
+              }`}>
               © {new Date().getFullYear()} {PERSONAL_INFO.name} · {PERSONAL_INFO.domain}
             </p>
           </div>
         </section>
       </main>
+
+      {selectedProject && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="case-study-title"
+          onClick={() => setSelectedProject(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-md"
+        >
+          <video
+            src="/yellow-black-hole.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-75"
+          />
+          <div className="pointer-events-none absolute inset-0 bg-black/25" />
+          <div
+            onClick={(event) => event.stopPropagation()}
+            className="relative flex max-h-[88dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-amber-300/25 bg-black/35 shadow-[0_24px_80px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-xl"
+          >
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-black/30" />
+            <header className="relative flex shrink-0 items-start justify-between gap-4 border-b border-white/10 p-5 md:p-6">
+              <div className="min-w-0">
+                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-amber-200/70">
+                  Case study
+                </p>
+                <h2
+                  id="case-study-title"
+                  className="mt-1 text-2xl font-medium tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+                >
+                  {selectedProject.title}
+                </h2>
+                <p className="mt-1 text-sm text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  {selectedProject.tagline}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedProject.highlights.map((highlight) => (
+                    <span
+                      key={highlight}
+                      className="rounded-full border border-amber-200/20 bg-amber-200/[0.07] px-2.5 py-1 text-[11px] text-amber-100/85"
+                    >
+                      {highlight}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedProject(null)}
+                aria-label="Close case study"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </header>
+
+            <div
+              ref={modalBodyRef}
+              tabIndex={-1}
+              className="relative flex-1 space-y-6 overflow-y-auto p-5 md:p-6 outline-none"
+            >
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  Overview
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  {selectedProject.summary}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  {selectedProject.problem}
+                </p>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  System Architecture
+                </h3>
+                <ul className="mt-2 space-y-2">
+                  {selectedProject.architecture.map((item) => (
+                    <li key={item} className="flex gap-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-300/70" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  Security &amp; Hardening
+                </h3>
+                <ul className="mt-2 space-y-2">
+                  {selectedProject.security.map((item) => (
+                    <li key={item} className="flex gap-2 text-sm leading-6 text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                      <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-emerald-300/70" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-200/80 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  Tech Stack
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {selectedProject.stack.map((tech) => (
+                    <span
+                      key={tech}
+                      className="rounded-full border border-white/12 bg-white/[0.03] px-3 py-1 text-xs text-white/75"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            </div>
+
+            <footer className="relative flex shrink-0 items-center justify-end gap-3 border-t border-white/10 p-4 md:p-5">
+              <button
+                type="button"
+                onClick={() => setSelectedProject(null)}
+                className="inline-flex items-center rounded-full border border-white/15 px-4 py-2 text-sm text-white/75 outline-none transition-colors hover:bg-white/5 hover:text-white focus-visible:ring-2 focus-visible:ring-amber-300"
+              >
+                Close
+              </button>
+              <a
+                href={selectedProject.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full border border-amber-200/25 bg-amber-200/10 px-4 py-2 text-sm font-medium text-amber-100 outline-none transition-colors hover:bg-amber-200/20 focus-visible:ring-2 focus-visible:ring-amber-300"
+              >
+                View on GitHub
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </footer>
+          </div>
+        </div>
+      )}
+
+      {isPhotoExpanded && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Profile photo"
+          onClick={() => setIsPhotoExpanded(false)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black p-4 backdrop-blur-md"
+        >
+          <div
+            onClick={(event) => event.stopPropagation()}
+            className="relative flex aspect-square w-full max-w-md items-end justify-center overflow-hidden rounded-3xl border border-amber-400/25 bg-black shadow-2xl"
+          >
+            <video
+              src="/yellow-black-hole.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-90"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_42%,rgba(0,0,0,0.88)_100%)]" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black via-black/70 to-transparent" />
+            <Image
+              src="/maruf-profile.png"
+              alt="Md. Maruf Hasan"
+              width={400}
+              height={400}
+              className="relative z-10 h-[85%] w-auto object-contain drop-shadow-[0_10px_28px_rgba(0,0,0,0.9)] [mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)]"
+            />
+            <button
+              type="button"
+              onClick={() => setIsPhotoExpanded(false)}
+              aria-label="Close photo"
+              className="absolute right-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white/85 outline-none transition-colors hover:bg-black/80 focus-visible:ring-2 focus-visible:ring-amber-300"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="absolute inset-x-0 bottom-4 z-20 text-center text-xs font-medium text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+              Md. Maruf Hasan · AI Engineer &amp; Cybersecurity Builder
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }
