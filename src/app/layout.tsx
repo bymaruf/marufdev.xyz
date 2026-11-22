@@ -7,8 +7,22 @@ import { PERSONAL_INFO } from "@/data/portfolioData";
 const description =
   "Portfolio of Maruf Hasan — AI Engineer & Cybersecurity Builder. Focused on LLM hardening, application security, and secure software systems.";
 
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Md. Maruf Hasan",
+  url: "https://marufdev.xyz",
+  jobTitle: PERSONAL_INFO.role,
+  description,
+  sameAs: [
+    PERSONAL_INFO.github,
+    "https://www.linkedin.com/in/bymaruf",
+    "https://www.facebook.com/bymaruf",
+  ],
+};
+
 export const metadata: Metadata = {
-  metadataBase: new URL(`https://${PERSONAL_INFO.domain}`),
+  metadataBase: new URL("https://marufdev.xyz"),
   title: `${PERSONAL_INFO.name} — ${PERSONAL_INFO.role}`,
   description,
   keywords: [
@@ -32,7 +46,6 @@ export const metadata: Metadata = {
     url: `https://${PERSONAL_INFO.domain}`,
     siteName: PERSONAL_INFO.domain,
     type: "website",
-    images: ["/blackhole-poster.jpg"],
   },
   twitter: {
     card: "summary_large_image",
@@ -40,9 +53,8 @@ export const metadata: Metadata = {
     description,
   },
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-32.png",
-    apple: "/apple-touch-icon.png",
+    icon: "/icon",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 
@@ -53,6 +65,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+      </head>
       <body className="bg-black text-white antialiased selection:bg-amber-300 selection:text-zinc-950">
         <ActiveSectionProvider>
           <Navbar />
