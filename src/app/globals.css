@@ -21,6 +21,20 @@
   }
 }
 
+/* Full-page scrolling is handled entirely by the browser. No wheel/touch
+   interception: wheels, trackpads and fingers all get their native behavior,
+   and the snap points keep each section aligned. */
+.page-snap-container {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+}
+
+.page-snap-section {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
 /* Keeps white type readable where the accretion disk passes behind it. */
 .text-on-video {
   text-shadow: 0 1px 14px rgba(0, 0, 0, 0.95);
@@ -41,7 +55,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html {
+  html,
+  .page-snap-container {
     scroll-behavior: auto;
   }
 }

@@ -419,8 +419,9 @@ export default function Home() {
     return () => window.cancelAnimationFrame(frame);
   }, [scrollToSection]);
 
-  // Native CSS snap handles wheel/trackpad; keyboard stepping is layered on
-  // with a short lock so held keys advance one section at a time.
+  // Native CSS snap owns wheel/trackpad/touch scrolling. Keyboard stepping
+  // simply targets the adjacent section with scrollIntoView; a short lock
+  // keeps held keys from queueing several jumps and skipping sections.
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -454,19 +455,33 @@ export default function Home() {
 
       if (isKeyScrollingRef.current) return;
 
-      const currentIndex = Math.round(
-        container.scrollTop / container.clientHeight
-      );
+      // Find the section closest to the viewport top rather than assuming
+      // every section is exactly one container tall (mobile dvh / min-h-screen).
+      const containerTop = container.getBoundingClientRect().top;
+      let currentIndex = 0;
+      let closestDistance = Infinity;
+      SECTIONS.forEach((id, index) => {
+        const section = document.getElementById(id);
+        if (!section) return;
+        const distance = Math.abs(
+          section.getBoundingClientRect().top - containerTop
+        );
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          currentIndex = index;
+        }
+      });
+
       let nextIndex: number;
 
       switch (event.key) {
         case "ArrowDown":
         case "PageDown":
-          nextIndex = Math.min(currentIndex + 1, SECTIONS.length - 1);
+          nextIndex = currentIndex + 1;
           break;
         case "ArrowUp":
         case "PageUp":
-          nextIndex = Math.max(currentIndex - 1, 0);
+          nextIndex = currentIndex - 1;
           break;
         case "Home":
           nextIndex = 0;
@@ -478,11 +493,17 @@ export default function Home() {
           return;
       }
 
+      const nextSection = document.getElementById(
+        SECTIONS[Math.min(Math.max(nextIndex, 0), SECTIONS.length - 1)]
+      );
+      if (!nextSection) return;
+
       event.preventDefault();
       isKeyScrollingRef.current = true;
-      container.scrollTo({
-        top: nextIndex * container.clientHeight,
-        behavior: "smooth",
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      nextSection.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "start",
       });
       window.clearTimeout(keyTimer);
       keyTimer = window.setTimeout(() => {
@@ -503,12 +524,12 @@ export default function Home() {
 
       <main
         ref={containerRef}
-        className="relative z-10 h-screen snap-y snap-mandatory overflow-x-clip overflow-y-auto scroll-smooth overscroll-contain"
+        className="page-snap-container relative z-10 h-[100dvh] overflow-x-clip overflow-y-auto"
       >
         {/* 01 — Overview */}
         <section
           id="home"
-          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="w-full max-w-2xl">
             <h1 className="mt-6 text-balance text-5xl font-medium leading-none tracking-[-0.045em] text-white sm:text-7xl lg:text-8xl max-md:mt-3 max-md:text-4xl">
@@ -555,7 +576,7 @@ export default function Home() {
         {/* 02 — Core focus */}
         <section
           id="focus"
-          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-4"
         >
           <div className="mx-auto w-full max-w-6xl">
             <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3 [@media(max-width:767px)_and_(max-height:700px)]:mb-2">
@@ -623,7 +644,7 @@ export default function Home() {
         {/* 03 — Featured projects */}
         <section
           id="projects"
-          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-2"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:py-24 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-2"
         >
           <div className="mx-auto w-full max-w-6xl">
             <header className="mb-10 flex flex-wrap items-end justify-between gap-5 max-md:mb-4 max-md:gap-3 [@media(max-width:767px)_and_(max-height:700px)]:mb-2">
@@ -705,7 +726,7 @@ export default function Home() {
         {/* 04 — Beyond the horizon */}
         <section
           id="contact"
-          className="flex h-[100dvh] md:min-h-screen snap-start snap-always items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:pt-24 md:pb-8 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-3"
+          className="flex h-[100dvh] md:min-h-screen page-snap-section items-center justify-start overflow-hidden md:overflow-visible px-6 pt-20 pb-6 md:pt-24 md:pb-8 sm:px-10 lg:px-16 [@media(max-width:767px)_and_(max-height:700px)]:pt-16 [@media(max-width:767px)_and_(max-height:700px)]:pb-3"
         >
           <div className="mx-auto w-full max-w-3xl">
             <h2 className="text-on-video mt-4 text-balance text-4xl font-medium tracking-[-0.035em] text-white sm:text-6xl max-md:mt-0 max-md:text-3xl">
