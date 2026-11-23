@@ -15,13 +15,13 @@ export interface ProjectItem {
 
 export const PERSONAL_INFO = {
   name: "Maruf Hasan",
-  role: "AI Engineer & Cybersecurity Builder",
+  role: "CS Student · Developer & AI/Security Enthusiast",
   domain: "marufdev.xyz",
   email: "mo.marufhasan@gmail.com",
   github: "https://github.com/bymaruf",
   githubHandle: "@bymaruf",
   about:
-    "AI Engineer & Cybersecurity Builder studying B.Sc. in Computer Science & Engineering at BUBT, focused on application security and securing LLM-powered systems.",
+    "B.Sc. in Computer Science & Engineering student at BUBT building software projects with C, C++, Python, and modern web tools, while actively learning AI, LLMs, and cybersecurity fundamentals.",
 };
 
 export const EDUCATION = {
@@ -30,34 +30,33 @@ export const EDUCATION = {
 };
 
 export const TECH_STACK: string[] = [
-  "Linux",
-  "Python",
-  "Cybersecurity",
-  "AI & LLMs",
-  "Kotlin",
+  "C",
   "C++",
-  "Next.js",
+  "Python",
+  "Linux",
   "Git & GitHub",
+  "Kotlin",
+  "Next.js",
 ];
 
 export const FOCUS_PILLARS: FocusPillar[] = [
   {
     number: "01",
-    title: "AI Security & LLM Hardening",
+    title: "AI & LLM Exploration",
     description:
-      "Assessing and defending LLM-powered applications against OWASP LLM Top 10 risks, including prompt injection (LLM01), sensitive information disclosure (LLM02), and excessive agency (LLM03).",
+      "Building hands-on applications with LLM APIs and multi-provider workflows while studying how modern AI assistants handle context and prompts.",
   },
   {
     number: "02",
-    title: "Application Security (AppSec)",
+    title: "Cybersecurity Fundamentals",
     description:
-      "Identifying and remediating web and mobile vulnerabilities across authentication flows, REST APIs, and client-side logic using OWASP security standards.",
+      "Learning core application and system security concepts, safe input handling, and defensive coding practices through continuous study and experimentation.",
   },
   {
     number: "03",
-    title: "Secure Software & Systems Foundations",
+    title: "Programming & Web Foundations",
     description:
-      "Building resilient software from the ground up with native Android (Kotlin), systems programming (C++), and clean web architectures (Next.js).",
+      "Writing structured software in C, C++, and Python on Linux, building Android apps with Kotlin, and learning full-stack web development with Next.js.",
   },
 ];
 
@@ -67,7 +66,7 @@ export const PROJECTS: ProjectItem[] = [
     title: "VibeReader",
     category: "Android & AI (Kotlin)",
     description:
-      "Native Android e-book reader (PDF & EPUB) integrating an AI Book Assistant and text-to-speech support, built with clean API key separation and structured document context handling.",
+      "Student Android project: a PDF and EPUB reader with an AI book assistant and text-to-speech, built while learning on-device parsing and clean API key handling.",
     tags: ["Kotlin", "Android", "Gemini API", "AI Assistant"],
     githubUrl: "https://github.com/bymaruf/VibeReader",
   },
@@ -76,7 +75,7 @@ export const PROJECTS: ProjectItem[] = [
     title: "banglishAI",
     category: "AI Concept & Web",
     description:
-      "Interactive web concept exploring conversational AI interfaces for Banglish (Bengali-English) text workflows.",
+      "A small web experiment exploring conversational AI interfaces for Banglish (Bengali-English) text, built with plain HTML, CSS, and JavaScript.",
     tags: ["HTML/CSS", "JavaScript", "Web Prototype", "AI Concept"],
     githubUrl: "https://github.com/bymaruf/banglishAI",
   },
@@ -85,7 +84,7 @@ export const PROJECTS: ProjectItem[] = [
     title: "Lifestream",
     category: "Systems Programming (C++)",
     description:
-      "Core C++ systems application demonstrating low-level memory management, structured data handling, and deterministic execution.",
+      "A personal C++ systems project for practising manual memory management, structured data containers, and deterministic execution.",
     tags: ["C++", "Systems Programming", "Data Structures"],
     githubUrl: "https://github.com/bymaruf/Lifestream",
   },

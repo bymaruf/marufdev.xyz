@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Md. Maruf Hasan — AI Engineer & Cybersecurity Builder";
+export const alt = "Md. Maruf Hasan — CSE Student & Developer";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -95,10 +95,10 @@ export default function Image() {
             Md. Maruf Hasan
           </div>
           <div style={{ fontSize: 32, color: "#fcd34d" }}>
-            AI Engineer &amp; Cybersecurity Builder
+            CSE Student &amp; Developer
           </div>
           <div style={{ fontSize: 24, color: "rgba(255,255,255,0.72)" }}>
-            Application Security · LLM Hardening · Secure Systems
+            Computer Science · AI · Cybersecurity
           </div>
         </div>
 

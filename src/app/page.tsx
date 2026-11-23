@@ -56,9 +56,9 @@ type CaseStudyDetail = Omit<
 
 const PROJECT_DETAILS: Record<string, CaseStudyDetail> = {
   vibereader: {
-    tagline: "An offline-first AI reading studio for Android",
+    tagline: "An offline-first Android reader with an AI assistant",
     problem:
-      "Readers need a private way to parse EPUB and PDF books and ask contextual questions without uploading their library to a cloud service.",
+      "I wanted to read EPUB and PDF books offline and ask questions about a passage without uploading my library to a cloud service.",
     architecture: [
       "Android API 24+ native EPUB/PDF parsing engine for on-device document text extraction and chapter structure.",
       "Multi-provider AI Book Assistant supporting OpenCode Zen, Gemini, OpenAI, OpenRouter, Claude, Groq, and DeepSeek through one interface.",
@@ -73,7 +73,7 @@ const PROJECT_DETAILS: Record<string, CaseStudyDetail> = {
   "banglish-ai": {
     tagline: "Conversational AI for Banglish workflows",
     problem:
-      "Bengali-English speakers lack natural conversational interfaces because most AI tools assume English-only prompts and phrasing.",
+      "I wanted a conversational interface that fits how Banglish speakers actually type, rather than assuming English-only prompts and phrasing.",
     architecture: [
       "Lightweight HTML/CSS and JavaScript single-page interface with no backend dependency.",
       "Client-side Banglish tokenization and prompt shaping for conversational AI workflows.",
@@ -86,9 +86,9 @@ const PROJECT_DETAILS: Record<string, CaseStudyDetail> = {
     highlights: ["Web Prototype", "Banglish UX", "No Backend"],
   },
   lifestream: {
-    tagline: "A deterministic systems core in modern C++",
+    tagline: "A small deterministic systems project in C++",
     problem:
-      "Data processing on constrained systems needs predictable, low-overhead execution without garbage-collection pauses.",
+      "I built this to practise predictable, low-overhead C++ execution without garbage-collection pauses.",
     architecture: [
       "Manual memory management with strict ownership for deterministic runtime behavior.",
       "Template-based structured data containers for handling streaming records.",
@@ -656,7 +656,7 @@ export default function Home() {
                 </h2>
               </div>
               <p className={`${legible} max-w-sm text-sm leading-6 text-white/70`}>
-                Core areas across AI security, application defense, and software engineering.
+                Areas I am actively building in and exploring as a Computer Science student.
               </p>
             </header>
 
@@ -799,8 +799,7 @@ export default function Home() {
               Beyond the horizon
             </h2>
             <p className="text-on-video mt-5 max-w-xl text-base leading-7 text-white/70 max-md:mt-2 max-md:text-sm max-md:leading-6">
-              {PERSONAL_INFO.role} working across application security, LLM hardening,
-              and secure software systems.
+              Computer Science undergraduate passionate about software development, AI, and cybersecurity—open to learning opportunities and entry-level projects.
             </p>
 
             <div className={`rounded-2xl divide-y divide-white/10 ${panelSurface} ${isMoreInfoOpen
@@ -818,11 +817,11 @@ export default function Home() {
                       className="group h-16 w-16 shrink-0 overflow-hidden rounded-full border border-white/15 bg-white/[0.03] outline-none ring-amber-300/40 transition hover:ring-2 focus-visible:ring-2 md:h-20 md:w-20 [@media(max-width:767px)_and_(max-height:700px)]:h-12 [@media(max-width:767px)_and_(max-height:700px)]:w-12"
                     >
                       <Image
-                        src="/maruf-profile.png"
+                        src="/profile.jpg"
                         alt="Md. Maruf Hasan"
                         width={80}
                         height={80}
-                        className="h-full w-full bg-transparent object-cover transition-transform duration-300 group-hover:scale-105"
+                        className="h-full w-full bg-transparent object-cover object-top transition-transform duration-300 group-hover:scale-105"
                       />
                     </button>
                     <div className="min-w-0">
@@ -830,7 +829,7 @@ export default function Home() {
                         Md. Maruf Hasan
                       </p>
                       <p className="text-xs text-white/60 md:text-sm">
-                        AI Engineer &amp; Cybersecurity Builder
+                        CS Student · Developer &amp; AI/Security Enthusiast
                       </p>
                     </div>
                   </div>
@@ -1035,7 +1034,7 @@ export default function Home() {
 
               <section>
                 <h3 className="text-xs font-medium text-neutral-400">
-                  Security &amp; hardening
+                  Privacy &amp; design notes
                 </h3>
                 <ul className="mt-3 space-y-3 text-sm leading-6 text-neutral-300">
                   {selectedProject.security.map((item) => (
@@ -1084,36 +1083,26 @@ export default function Home() {
         >
           <div
             onClick={(event) => event.stopPropagation()}
-            className="relative flex aspect-square w-full max-w-md items-end justify-center overflow-hidden rounded-3xl border border-amber-400/25 bg-black shadow-2xl"
+            className="relative w-full max-w-[340px] overflow-hidden rounded-2xl border border-white/15 bg-[#0a0a0b]/90 shadow-2xl backdrop-blur-md"
           >
-            <video
-              src="/yellow-black-hole.mp4"
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-90"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_42%,rgba(0,0,0,0.88)_100%)]" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black via-black/70 to-transparent" />
             <Image
-              src="/maruf-profile.png"
+              src="/profile.jpg"
               alt="Md. Maruf Hasan"
-              width={400}
-              height={400}
-              className="relative z-10 h-[85%] w-auto object-contain drop-shadow-[0_10px_28px_rgba(0,0,0,0.9)] [mask-image:linear-gradient(to_bottom,black_70%,transparent_100%)]"
+              width={852}
+              height={1047}
+              className="block h-auto w-full object-cover object-top"
             />
             <button
               type="button"
               onClick={() => setIsPhotoExpanded(false)}
               aria-label="Close photo"
-              className="absolute right-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white/85 outline-none transition-colors hover:bg-black/80 focus-visible:ring-2 focus-visible:ring-amber-300"
+              className="absolute right-3 top-3 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white outline-none transition-colors hover:bg-black/90 focus-visible:ring-2 focus-visible:ring-white/40"
             >
               <X className="h-4 w-4" />
             </button>
-            <p className="absolute inset-x-0 bottom-4 z-20 text-center text-xs font-medium text-white/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
-              Md. Maruf Hasan · AI Engineer &amp; Cybersecurity Builder
-            </p>
+            <div className="border-t border-white/10 bg-[#0a0a0b] px-4 py-3 text-center text-xs text-neutral-300">
+              Md. Maruf Hasan · CS Student &amp; AI/Security Enthusiast
+            </div>
           </div>
         </div>
       )}

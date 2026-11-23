@@ -5,7 +5,7 @@ import { ActiveSectionProvider } from "@/components/ActiveSectionContext";
 import { PERSONAL_INFO } from "@/data/portfolioData";
 
 const description =
-  "Portfolio of Maruf Hasan — AI Engineer & Cybersecurity Builder. Focused on LLM hardening, application security, and secure software systems.";
+  "Portfolio of Maruf Hasan — Computer Science undergraduate and developer exploring AI, LLMs, and cybersecurity through student projects.";
 
 const personJsonLd = {
   "@context": "https://schema.org",
@@ -23,16 +23,17 @@ const personJsonLd = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://marufdev.xyz"),
-  title: `${PERSONAL_INFO.name} — ${PERSONAL_INFO.role}`,
+  title: `${PERSONAL_INFO.name} — CSE Student & Developer`,
   description,
   keywords: [
     "Maruf Hasan",
     "marufdev",
     PERSONAL_INFO.domain,
+    "Computer Science",
+    "Student Developer",
+    "AI",
+    "LLMs",
     "Cybersecurity",
-    "AI Security",
-    "AppSec",
-    "LLM Hardening",
     "Kotlin",
     "Android",
     "C++",
@@ -41,7 +42,7 @@ export const metadata: Metadata = {
   authors: [{ name: PERSONAL_INFO.name, url: `https://${PERSONAL_INFO.domain}` }],
   creator: PERSONAL_INFO.name,
   openGraph: {
-    title: `${PERSONAL_INFO.name} — ${PERSONAL_INFO.role}`,
+    title: `${PERSONAL_INFO.name} — CSE Student & Developer`,
     description,
     url: `https://${PERSONAL_INFO.domain}`,
     siteName: PERSONAL_INFO.domain,
@@ -49,7 +50,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${PERSONAL_INFO.name} — ${PERSONAL_INFO.role}`,
+    title: `${PERSONAL_INFO.name} — CSE Student & Developer`,
     description,
   },
   icons: {
